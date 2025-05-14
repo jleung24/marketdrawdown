@@ -1,6 +1,9 @@
 from sqlalchemy import create_engine, text
 from snowflake.sqlalchemy import URL 
+
 from helpers.read_config import read_config
+from snowflake.pydantic_models import *
+
 
 config = read_config('Snowflake')
 
@@ -30,22 +33,23 @@ class SnowflakeClient:
         self.connection.close()
         self.engine.dispose()
 
-    def insert_to_stock_data_table(self, date, stock_symbol, open, high, low, close, volume, local_max):
+    def insert_to_stock_data_table(self,stock_data: StockData):
         with self.connection as connection:
             connection.execute(
                 text("""
-                    INSERT INTO STOCK_DATA (date, stock_symbol, open, high, low, close, volume, local_max)
-                    SELECT :date, :stock_symbol, :open, :high, :low, :close, :volume, :local_max;
+                    INSERT INTO STOCK_DATA (stock_data_id, date, stock_symbol, open, high, low, close, volume, local_max_id)
+                    SELECT :stock_data_id, :date, :stock_symbol, :open, :high, :low, :close, :volume, :local_max_id;
                 """),
                 {
-                    "date": date,
-                    "stock_symbol": stock_symbol,
-                    "open": open,
-                    "high": high,
-                    "low": low,
-                    "close": close,
-                    "volume": volume,
-                    "local_max": local_max
+                    "stock_data_id": stock_data.stock_data_id,
+                    "date": stock_data.date,
+                    "stock_symbol": stock_data.stock_symbol,
+                    "open": stock_data.open,
+                    "high": stock_data.high,
+                    "low": stock_data.low,
+                    "close": stock_data.close,
+                    "volume": stock_data.volume,
+                    "local_max_id": stock_data.local_max_id
                 }
             )
             connection.commit()
@@ -64,10 +68,27 @@ class SnowflakeClient:
 
     
 
-test = SnowflakeClient()
-test.create_connection()
-# test.insert_to_stock_data_table("2000-10-10", "SPY", 10, 10, 10, 10, 10, 10)
+# test = SnowflakeClient()
+# test.create_connection()
+
+# # data = {
+# #     "stock_data_id": "20001010_SPY",
+# #     "date": "2000-10-10",
+# #     "stock_symbol": "SPY",
+# #     "open": 10,
+# #     "high": 10,
+# #     "low": 10,
+# #     "close": 10,
+# #     "volume": 10,
+# #     "local_max_id": "20001010_SPY"
+# # }
+
+# # if stock_data := StockData(**data):
+# #     pass
+
+# # test.insert_to_stock_data_table(stock_data)
+# # test.insert_to_stock_data_table("20001010_SPY","2000-10-10", "SPY", 10, 10, 10, 10, 10, "20001010_SPY")
 # test.clear_table("stock_data")
-# test.print_table("stock_data")
-test.cleanup()
+# # test.print_table("stock_data")
+# test.cleanup()
 
