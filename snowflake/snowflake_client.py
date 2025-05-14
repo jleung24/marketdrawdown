@@ -11,10 +11,9 @@ config = read_config('Snowflake')
 class SnowflakeClient:
 
     def __init__(self):
-        self.connection = None
         self.engine = None
 
-    def create_connection(self):
+    def create_engine(self):
         self.engine = create_engine(
             URL(
                 account = config['AccountIdentifier'],
@@ -27,14 +26,11 @@ class SnowflakeClient:
             )
         )
 
-        self.connection = self.engine.connect()
-
     def cleanup(self):
-        self.connection.close()
         self.engine.dispose()
 
     def insert_to_stock_data_table(self,stock_data: StockData):
-        with self.connection as connection:
+        with self.engine.connect() as connection:
             connection.execute(
                 text("""
                     INSERT INTO STOCK_DATA (stock_data_id, date, stock_symbol, open, high, low, close, volume, local_max_id)
@@ -54,41 +50,54 @@ class SnowflakeClient:
             )
             connection.commit()
     
-    def clear_table(self, table_name):
-        with self.connection as connection:
+    def clear_table(self, table_name: str):
+        with self.engine.connect() as connection:
             statement = text(f"DELETE FROM {table_name};")
             connection.execute(statement)
             connection.commit()
 
-    def print_table(self, table_name):
-        with self.connection as connection:
+    def print_table(self, table_name: str):
+        with self.engine.connect() as connection:
             statement = text(f"SELECT * FROM {table_name}")
             for row in connection.execute(statement):
                 print(row)
 
+    def stock_data_id_exists(self, stock_data_id: str) -> bool:
+         with self.engine.connect() as connection:
+            statement = text(f"SELECT * FROM stock_data WHERE stock_data_id = '{stock_data_id}'")
+            for row in connection.execute(statement):
+                return True
+                
+            return False
     
+    def table_is_empty(self, table_name: str):
+         with self.engine.connect() as connection:
+            statement = text(f"SELECT * FROM {table_name}")
+            for row in connection.execute(statement):
+                return False
+                
+            return True
+         
+    def no_stock_data(self, stock_symbol: str):
+         with self.engine.connect() as connection:
+            statement = text(f"SELECT * FROM stock_data WHERE stock_symbol = '{stock_symbol}'")
+            for row in connection.execute(statement):
+                return False
+                
+            return True
+         
+    def get_previous_max(self, date: str, stock_symbol: str) -> str:
+        with self.engine.connect() as connection:
+            statement = text(f"""SELECT local_max_id FROM stock_data WHERE stock_symbol = '{stock_symbol}' AND date in 
+                                (
+                                    SELECT MAX(date) FROM stock_data WHERE stock_symbol = '{stock_symbol}' AND date < TO_DATE('{date}')
+                                )
+                            """)
+            for row in connection.execute(statement):
+                return row[0]
 
-# test = SnowflakeClient()
-# test.create_connection()
-
-# # data = {
-# #     "stock_data_id": "20001010_SPY",
-# #     "date": "2000-10-10",
-# #     "stock_symbol": "SPY",
-# #     "open": 10,
-# #     "high": 10,
-# #     "low": 10,
-# #     "close": 10,
-# #     "volume": 10,
-# #     "local_max_id": "20001010_SPY"
-# # }
-
-# # if stock_data := StockData(**data):
-# #     pass
-
-# # test.insert_to_stock_data_table(stock_data)
-# # test.insert_to_stock_data_table("20001010_SPY","2000-10-10", "SPY", 10, 10, 10, 10, 10, "20001010_SPY")
-# test.clear_table("stock_data")
-# # test.print_table("stock_data")
-# test.cleanup()
-
+    def get_stock_data(self, stock_data_id: str):
+        with self.engine.connect() as connection:
+            statement = text(f"SELECT * FROM stock_data WHERE stock_data_id = '{stock_data_id}'")
+            for row in connection.execute(statement):
+                return row
