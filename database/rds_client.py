@@ -1,30 +1,28 @@
 from sqlalchemy import create_engine, text
-from snowflake.sqlalchemy import URL 
+from sqlalchemy.engine import URL
 
 from helpers.read_config import read_config
-from snowflake.pydantic_models import *
+from database.pydantic_models import *
 
 
-config = read_config('Snowflake')
+config = read_config('RDS')
 
 
-class SnowflakeClient:
+class RdsClient:
 
     def __init__(self):
         self.engine = None
 
     def create_engine(self):
-        self.engine = create_engine(
-            URL(
-                account = config['AccountIdentifier'],
-                user = config['User'],
-                password = config['Password'],
-                database = 'marketdata',
-                schema = 'public',
-                warehouse = 'compute_wh',
-                role='accountadmin',
-            )
+        url = URL.create(
+            drivername="postgresql+psycopg2",
+            username=config['User'],
+            password=config['Password'],
+            host=config['Host'],
+            port=config['Port'],
+            database='market_data'
         )
+        self.engine = create_engine(url)
 
     def cleanup(self):
         self.engine.dispose()
@@ -90,7 +88,7 @@ class SnowflakeClient:
         with self.engine.connect() as connection:
             statement = text(f"""SELECT local_max_id FROM stock_data WHERE stock_symbol = '{stock_symbol}' AND date in 
                                 (
-                                    SELECT MAX(date) FROM stock_data WHERE stock_symbol = '{stock_symbol}' AND date < TO_DATE('{date}')
+                                    SELECT MAX(date) FROM stock_data WHERE stock_symbol = '{stock_symbol}' AND date < TO_DATE('{date}', 'YYYY-MM-DD')
                                 )
                             """)
             for row in connection.execute(statement):

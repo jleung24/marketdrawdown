@@ -1,14 +1,19 @@
-from snowflake.pydantic_models import *
-from snowflake.snowflake_client import SnowflakeClient
+from database.pydantic_models import *
+from database.snowflake_client import SnowflakeClient
+from database.rds_client import RdsClient
 from alpha_vantage.alpha_vantage_client import AlphaVantageClient
 
 
 class StockDataPipeline():
 
-    def __init__(self):
+    def __init__(self, client: str):
         self.alpha_vantage = AlphaVantageClient()
-        self.snowflake = SnowflakeClient()
-        self.snowflake.create_engine()
+
+        if client == "snowflake":
+            self.engine = SnowflakeClient()
+        else:
+            self.engine = RdsClient()
+        self.engine.create_engine()
         self.stock_data = None
 
     def update_database(self, stock_symbol: str):
@@ -18,7 +23,7 @@ class StockDataPipeline():
         for date, data in reversed(self.stock_data['Time Series (Daily)'].items()):           
             stock_data_id = f"{date.replace("-", "")}_{stock_symbol}"
 
-            if self.snowflake.stock_data_id_exists(stock_data_id):
+            if self.engine.stock_data_id_exists(stock_data_id):
                 continue
 
             data_dict['stock_data_id'] = stock_data_id
@@ -30,7 +35,7 @@ class StockDataPipeline():
             data_dict['close'] = float(data['4. close'])
             data_dict['volume'] = float(data['5. volume'])
             
-            if self.snowflake.no_stock_data(stock_symbol):
+            if self.engine.no_stock_data(stock_symbol):
                 data_dict['local_max_id'] = stock_data_id
             else:
                 data_dict['local_max_id'] = self.get_local_max_id(data_dict)
@@ -38,13 +43,13 @@ class StockDataPipeline():
             if pydantic_data := StockData(**data_dict):
                 pass
 
-            self.snowflake.insert_to_stock_data_table(pydantic_data)
+            self.engine.insert_to_stock_data_table(pydantic_data)
         
-        self.snowflake.cleanup()
+        self.engine.cleanup()
 
     def get_local_max_id(self, data_dict: dict):
-        prev_max_id = self.snowflake.get_previous_max(data_dict['date'], data_dict['stock_symbol'])
-        prev_max_data = self.snowflake.get_stock_data(prev_max_id)
+        prev_max_id = self.engine.get_previous_max(data_dict['date'], data_dict['stock_symbol'])
+        prev_max_data = self.engine.get_stock_data(prev_max_id)
         prev_max = float(prev_max_data[4])
 
         if prev_max > data_dict['high']:
@@ -53,5 +58,5 @@ class StockDataPipeline():
         return data_dict['stock_data_id']
 
 if __name__ == "__main__":
-    pipeline = StockDataPipeline()
+    pipeline = StockDataPipeline("rds")
     pipeline.update_database("SPY")
