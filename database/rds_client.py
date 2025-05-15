@@ -12,6 +12,7 @@ class RdsClient:
 
     def __init__(self):
         self.engine = None
+        self.stock_data_id_list = []
 
     def create_engine(self):
         url = URL.create(
@@ -61,15 +62,23 @@ class RdsClient:
                 print(row)
 
     def stock_data_id_exists(self, stock_data_id: str) -> bool:
-         with self.engine.connect() as connection:
-            statement = text(f"SELECT * FROM stock_data WHERE stock_data_id = '{stock_data_id}'")
+        if not self.stock_data_id_list:
+            self.cache_stock_data_ids()
+        
+        if stock_data_id in self.stock_data_id_list:
+            return True
+
+        return False
+    
+    def cache_stock_data_ids(self):
+        self.stock_data_id_list = []
+        with self.engine.connect() as connection:
+            statement = text(f"SELECT stock_data_id FROM stock_data")
             for row in connection.execute(statement):
-                return True
-                
-            return False
+                self.stock_data_id_list.append(row[0])
     
     def table_is_empty(self, table_name: str):
-         with self.engine.connect() as connection:
+        with self.engine.connect() as connection:
             statement = text(f"SELECT * FROM {table_name}")
             for row in connection.execute(statement):
                 return False
@@ -77,12 +86,13 @@ class RdsClient:
             return True
          
     def no_stock_data(self, stock_symbol: str):
-         with self.engine.connect() as connection:
-            statement = text(f"SELECT * FROM stock_data WHERE stock_symbol = '{stock_symbol}'")
-            for row in connection.execute(statement):
-                return False
-                
-            return True
+        if not self.stock_data_id_list:
+            self.cache_stock_data_ids()
+
+        if any(stock_symbol in id for id in self.stock_data_id_list):
+            return False    
+        
+        return True
          
     def get_previous_max(self, date: str, stock_symbol: str) -> str:
         with self.engine.connect() as connection:
