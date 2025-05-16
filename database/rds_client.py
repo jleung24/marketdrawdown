@@ -116,21 +116,27 @@ class RdsClient:
         drawdown_list = []
 
         with self.engine.connect() as connection:
-            statement = text(f"""
+            statement = text("""
                 SELECT sd1.stock_data_id
                 FROM stock_data AS sd1
                 JOIN (
                     SELECT high, stock_data_id, date FROM stock_data
                 ) AS sd2 
                 ON sd2.stock_data_id = sd1.local_max_id
-                WHERE sd1.stock_symbol = '{drawdown.stock_symbol}'
-                AND ((sd2.high - sd1.low) / sd2.high)*100 > {drawdown.min}
-                AND ((sd2.high - sd1.low) / sd2.high)*100 < {drawdown.max}
-                AND ABS(sd1.date - sd2.date) > {drawdown.min}
-                AND ABS(sd1.date - sd2.date) < {drawdown.max}
+                WHERE sd1.stock_symbol = :stock_symbol
+                AND ((sd2.high - sd1.low) / sd2.high)*100 > :min
+                AND ((sd2.high - sd1.low) / sd2.high)*100 < :max
+                AND ABS(sd1.date - sd2.date) > :duration_days_min
+                AND ABS(sd1.date - sd2.date) < :duration_days_max
             """)
 
-            for row in connection.execute(statement):
+            for row in connection.execute(statement, {
+                "stock_symbol": drawdown.stock_symbol,
+                "min": drawdown.min,
+                "max": drawdown.max,
+                "duration_days_min": drawdown.duration_days_min,
+                "duration_days_max": drawdown.duration_days_max
+            }):
                 drawdown_list.append(row[0])
             
             return drawdown_list
