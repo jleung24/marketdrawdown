@@ -3,6 +3,7 @@ from sqlalchemy.engine import URL
 
 from helpers.read_config import read_config
 from database.pydantic_models import *
+from computation.drawdown import Drawdown
 
 
 config = read_config('RDS')
@@ -96,11 +97,12 @@ class RdsClient:
          
     def get_previous_max(self, date: str, stock_symbol: str) -> str:
         with self.engine.connect() as connection:
-            statement = text(f"""SELECT local_max_id FROM stock_data WHERE stock_symbol = '{stock_symbol}' AND date in 
-                                (
-                                    SELECT MAX(date) FROM stock_data WHERE stock_symbol = '{stock_symbol}' AND date < TO_DATE('{date}', 'YYYY-MM-DD')
-                                )
-                            """)
+            statement = text(f"""
+                SELECT local_max_id FROM stock_data WHERE stock_symbol = '{stock_symbol}' AND date in 
+                    (
+                        SELECT MAX(date) FROM stock_data WHERE stock_symbol = '{stock_symbol}' AND date < TO_DATE('{date}', 'YYYY-MM-DD')
+                    )
+            """)
             for row in connection.execute(statement):
                 return row[0]
 
@@ -109,3 +111,26 @@ class RdsClient:
             statement = text(f"SELECT * FROM stock_data WHERE stock_data_id = '{stock_data_id}'")
             for row in connection.execute(statement):
                 return row
+
+    def get_drawdowns(self, drawdown: Drawdown):
+        drawdown_list = []
+
+        with self.engine.connect() as connection:
+            statement = text(f"""
+                SELECT sd1.stock_data_id
+                FROM stock_data AS sd1
+                JOIN (
+                    SELECT high, stock_data_id, date FROM stock_data
+                ) AS sd2 
+                ON sd2.stock_data_id = sd1.local_max_id
+                WHERE sd1.stock_symbol = '{drawdown.stock_symbol}'
+                AND ((sd2.high - sd1.low) / sd2.high)*100 > {drawdown.min}
+                AND ((sd2.high - sd1.low) / sd2.high)*100 < {drawdown.max}
+                AND ABS(sd1.date - sd2.date) > {drawdown.min}
+                AND ABS(sd1.date - sd2.date) < {drawdown.max}
+            """)
+
+            for row in connection.execute(statement):
+                drawdown_list.append(row[0])
+            
+            return drawdown_list
