@@ -16,10 +16,8 @@ class Drawdowns:
     
 
 
-
-drawdown = Drawdown("SPY", 20, 50, 10, 100)
+drawdown = Drawdown("SPY", 20, 50, 10, 1000)
 test = Drawdowns(drawdown)
 test.get_drawdowns()
-print(test.stock_data_id_list)
 
 
