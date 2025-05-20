@@ -112,8 +112,8 @@ class RdsClient:
             for row in connection.execute(statement):
                 return row
 
-    def get_drawdowns(self, drawdown: Drawdown):
-        drawdown_list = {}
+    def get_drawdowns(self, drawdown: Drawdown) -> dict:
+        drawdown_dict = {}
 
         with self.engine.connect() as connection:
             statement = text("""
@@ -137,15 +137,15 @@ class RdsClient:
                 "duration_days_min": drawdown.duration_days_min,
                 "duration_days_max": drawdown.duration_days_max
             }):
-                drawdown_list[row[0]] = {}
-                drawdown_list[row[0]]["drawdown_date"] = row[1]
-                drawdown_list[row[0]]["low"] = row[2]
-                drawdown_list[row[0]]["local_max"] = row[3]
+                drawdown_dict[row[0]] = {}
+                drawdown_dict[row[0]]["drawdown_date"] = row[1]
+                drawdown_dict[row[0]]["low"] = row[2]
+                drawdown_dict[row[0]]["local_max"] = row[3]
             
-            return drawdown_list
+            return drawdown_dict
     
-    def get_recovery_data(self, drawdown_data: dict, drawdown: Drawdown, recovery_percentage: int):
-        data = drawdown_data
+    def get_recovery_data(self, drawdown_data: dict, drawdown: Drawdown, recovery_percentage: int) -> dict:
+        data = drawdown_data.copy()
         for stock_data_id, drawdown_info in drawdown_data.items():
             target = self.calculate_target(drawdown_info, recovery_percentage)
 
@@ -163,7 +163,12 @@ class RdsClient:
                     "target": target,
                     "drawdown_date": drawdown_info["drawdown_date"]
                 }):
-                    data[stock_data_id]["recovery_date"] = row[0]
+                    recovery_date = row[0]
+                    data[stock_data_id]["recovery_date"] = recovery_date
+
+                    if not recovery_date:
+                        del data[stock_data_id]
+                    
                     # print(f"{drawdown_info['drawdown_date']} {drawdown_info['low']}    {row[0]} {target}")
 
         return data
