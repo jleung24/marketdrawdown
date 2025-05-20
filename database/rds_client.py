@@ -113,11 +113,11 @@ class RdsClient:
                 return row
 
     def get_drawdowns(self, drawdown: Drawdown):
-        drawdown_list = []
+        drawdown_list = {}
 
         with self.engine.connect() as connection:
             statement = text("""
-                SELECT sd1.stock_data_id
+                SELECT sd1.stock_data_id, sd1.date, sd1.low, sd2.high
                 FROM stock_data AS sd1
                 JOIN (
                     SELECT high, stock_data_id, date FROM stock_data
@@ -137,6 +137,44 @@ class RdsClient:
                 "duration_days_min": drawdown.duration_days_min,
                 "duration_days_max": drawdown.duration_days_max
             }):
-                drawdown_list.append(row[0])
+                drawdown_list[row[0]] = {}
+                drawdown_list[row[0]]["drawdown_date"] = row[1]
+                drawdown_list[row[0]]["low"] = row[2]
+                drawdown_list[row[0]]["local_max"] = row[3]
             
             return drawdown_list
+    
+    def get_recovery_data(self, drawdown_data: dict, drawdown: Drawdown, recovery_percentage: int):
+        data = drawdown_data
+        for stock_data_id, drawdown_info in drawdown_data.items():
+            target = self.calculate_target(drawdown_info, recovery_percentage)
+
+            with self.engine.connect() as connection:
+                statement = text("""
+                    SELECT sd2.date
+                    FROM stock_data sd1
+                    JOIN(
+                        SELECT MIN(date) as date
+                        FROM stock_data
+                        WHERE low > :target
+                    ) AS sd2
+                    ON 1=1
+                    WHERE sd1.stock_symbol = :stock_symbol
+                    AND sd1.stock_data_id = :stock_data_id
+                """)
+
+                for row in connection.execute(statement, {
+                    "stock_symbol": drawdown.stock_symbol,
+                    "stock_data_id": stock_data_id,
+                    "target": target
+                }):
+                    data[stock_data_id]["recovery_date"] = row[0]
+
+        return data
+
+    
+    def calculate_target(self, drawdown_info: dict, recovery_percentage: int):
+        drawdown_diff = drawdown_info["local_max"] - drawdown_info["low"]
+        target_gain = (drawdown_diff * recovery_percentage) / 100
+        target = drawdown_info["low"] + target_gain
+        return target
