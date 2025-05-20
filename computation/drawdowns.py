@@ -23,3 +23,4 @@ test = Drawdowns(drawdown)
 test.get_drawdowns()
 test.get_drawdown_info(100)
 print(test.drawdown_data)
+
