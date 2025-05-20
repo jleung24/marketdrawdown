@@ -151,28 +151,23 @@ class RdsClient:
 
             with self.engine.connect() as connection:
                 statement = text("""
-                    SELECT sd2.date
-                    FROM stock_data sd1
-                    JOIN(
-                        SELECT MIN(date) as date
-                        FROM stock_data
-                        WHERE low > :target
-                    ) AS sd2
-                    ON 1=1
-                    WHERE sd1.stock_symbol = :stock_symbol
-                    AND sd1.stock_data_id = :stock_data_id
+                    SELECT MIN(date)
+                    FROM stock_data
+                    WHERE high > :target
+                    AND date > :drawdown_date
                 """)
 
                 for row in connection.execute(statement, {
                     "stock_symbol": drawdown.stock_symbol,
                     "stock_data_id": stock_data_id,
-                    "target": target
+                    "target": target,
+                    "drawdown_date": drawdown_info["drawdown_date"]
                 }):
                     data[stock_data_id]["recovery_date"] = row[0]
+                    # print(f"{drawdown_info['drawdown_date']} {drawdown_info['low']}    {row[0]} {target}")
 
         return data
 
-    
     def calculate_target(self, drawdown_info: dict, recovery_percentage: int):
         drawdown_diff = drawdown_info["local_max"] - drawdown_info["low"]
         target_gain = (drawdown_diff * recovery_percentage) / 100

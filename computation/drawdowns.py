@@ -1,6 +1,7 @@
 from computation.drawdown import Drawdown
 from database.rds_client import RdsClient
 
+
 class Drawdowns:
 
     def __init__(self, drawdown: Drawdown):
@@ -18,9 +19,8 @@ class Drawdowns:
         self.drawdown_data = self.client.get_recovery_data(self.drawdown_data, self.drawdown, recovery_percentage)
 
 
-drawdown = Drawdown("SPY", 20, 50, 10, 1000)
+drawdown = Drawdown("SPY", 20, 30, 10, 1000)
 test = Drawdowns(drawdown)
 test.get_drawdowns()
 test.get_drawdown_info(100)
-print(test.drawdown_data)
-
+# print(test.drawdown_data)
