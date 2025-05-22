@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Double-Ended Range Slider with htmx and CSRF</title>
+  <!-- htmx CDN -->
+  <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
+  <!-- noUiSlider CSS and JS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
+  <style>
+    #slider {
+      margin: 2em 0;
+      width: 300px;
+    }
+    .slider-values {
+      font-weight: bold;
+      margin-left: 10px;
+    }
+  </style>
+</head>
+<body>
+  <form 
+    hx-post="/get_data/"
+    hx-target="#result"
+    hx-swap="innerHTML"
+    id="rangeForm"
+    method="POST"
+  >
+    {% csrf_token %}
+
+    <label for="slider">Select Range:</label>
+    <div id="slider"></div>
+    <input type="hidden" name="range_min" id="range_min">
+    <input type="hidden" name="range_max" id="range_max">
+    <span class="slider-values">
+      <span id="min_val"></span> - <span id="max_val"></span>
+    </span>
+    <br><br>
+    <button type="submit">Submit</button>
+  </form>
+
+  <div id="result"></div>
+  
+  <script>
+    // Initialize noUiSlider
+    var slider = document.getElementById('slider');
+    noUiSlider.create(slider, {
+      start: [25, 75],
+      connect: true,
+      range: {
+        'min': 0,
+        'max': 100
+      },
+      step: 1,
+      tooltips: [true, true],
+      format: {
+        to: function (value) { return Math.round(value); },
+        from: function (value) { return Number(value); }
+      }
+    });
+
+    // Update hidden inputs and displayed values
+    var minInput = document.getElementById('range_min');
+    var maxInput = document.getElementById('range_max');
+    var minVal = document.getElementById('min_val');
+    var maxVal = document.getElementById('max_val');
+
+    slider.noUiSlider.on('update', function(values, handle) {
+      var min = Math.min(values[0], values[1]);
+      var max = Math.max(values[0], values[1]);
+      minInput.value = min;
+      maxInput.value = max;
+      minVal.textContent = min;
+      maxVal.textContent = max;
+    });
+
+    // Initialize values on page load
+    slider.noUiSlider.set([25, 75]);
+  </script>
+</body>
+</html>

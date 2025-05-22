@@ -21,6 +21,7 @@ from web.market_drawdown import views
 
 
 urlpatterns = [
+    path('', views.main_view, name="main"),
     path('pogfrogyupyup33/', admin.site.urls),
-    path('test/', views.test_view, name='test_vew')
+    path('get_data/', views.get_data_view, name='get_data')
 ]
