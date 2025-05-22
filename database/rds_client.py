@@ -155,11 +155,11 @@ class RdsClient:
                     FROM stock_data
                     WHERE high > :target
                     AND date > :drawdown_date
+                    AND stock_symbol = :stock_symbol
                 """)
 
                 for row in connection.execute(statement, {
                     "stock_symbol": drawdown.stock_symbol,
-                    "stock_data_id": stock_data_id,
                     "target": target,
                     "drawdown_date": drawdown_info["drawdown_date"]
                 }):

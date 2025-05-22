@@ -1,5 +1,3 @@
-import math
-
 from computation.drawdown import Drawdown
 from database.rds_client import RdsClient
 
@@ -30,7 +28,7 @@ class Drawdowns:
             self.push_recovery_yearly_data(drawdown_info)
 
     def push_recovery_months_data(self, total_recovery_days: int):
-        total_recovery_months = math.ceil(total_recovery_days/30)
+        total_recovery_months = round(total_recovery_days/30)
 
         if total_recovery_months in self.recovery_graph.keys():
             self.recovery_graph[total_recovery_months] += 1
@@ -48,4 +46,5 @@ drawdown = Drawdown("SPY", 20, 30, 10, 1000)
 test = Drawdowns(drawdown)
 test.get_drawdowns()
 test.get_drawdown_info(100)
-print(test.recovery_yearly_scatter)
+print(test.drawdown_data)    
+
