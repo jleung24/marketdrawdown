@@ -1,3 +1,6 @@
+import boto3
+import json
+from botocore.exceptions import ClientError
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
 
@@ -16,10 +19,11 @@ class RdsClient:
         self.stock_data_id_list = []
 
     def create_engine(self):
+        password = json.loads(self.get_secret())['password']
         url = URL.create(
             drivername="postgresql+psycopg2",
             username=config['User'],
-            password=config['Password'],
+            password=password,
             host=config['Host'],
             port=config['Port'],
             database='market_data'
@@ -28,6 +32,29 @@ class RdsClient:
 
     def cleanup(self):
         self.engine.dispose()
+
+    def get_secret(self):
+        secret_name = config["SecretName"]
+        region_name = "us-west-1"
+
+        # Create a Secrets Manager client
+        session = boto3.session.Session()
+        client = session.client(
+            service_name='secretsmanager',
+            region_name=region_name
+        )
+
+        try:
+            get_secret_value_response = client.get_secret_value(
+                SecretId=secret_name
+            )
+        except ClientError as e:
+            # For a list of exceptions thrown, see
+            # https://docs.aws.amazon.com/secretsmanager/latest/apireference/API_GetSecretValue.html
+            raise e
+
+        secret = get_secret_value_response['SecretString']
+        return secret
 
     def insert_to_stock_data_table(self,stock_data: StockData):
         with self.engine.connect() as connection:

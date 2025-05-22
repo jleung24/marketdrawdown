@@ -9,14 +9,109 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">
   <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
   <style>
-    #slider {
+    /* #slider {
       margin: 2em 0;
       width: 300px;
-    }
+    } */
     .slider-values {
       font-weight: bold;
       margin-left: 10px;
     }
+
+    #slider-round, #slider-round-2, #slider-round-3 {
+      height: 10px;
+      margin: 2em 0;
+      width: 300px;
+    }
+
+    #slider-round-3 .noUi-connect {
+        background: #6aa56f;
+    }
+
+    #slider-round-2 .noUi-connect {
+        background: #616fac;
+    }
+
+    #slider-round .noUi-connect {
+        background: #cf6d75;
+    }
+
+    #slider-round-3 .noUi-base,
+    #slider-round-2 .noUi-base,
+    #slider-round .noUi-base {
+        background: #dfdfdf;
+    }
+
+    #slider-round-3 .noUi-handle,
+    #slider-round-2 .noUi-handle,
+    #slider-round .noUi-handle {
+        height: 18px;
+        width: 18px;
+        top: -5px;
+        right: -9px; /* half the width */
+        border-radius: 9px;
+        background: #979797;
+    }
+  
+    .slider-styled,
+    .slider-styled .noUi-handle {
+        box-shadow: none;
+    }
+
+    /* Hide markers on slider handles */
+    .slider-styled .noUi-handle::before,
+    .slider-styled .noUi-handle::after {
+        display: none;
+    }
+
+    .noUi-horizontal .noUi-handle-lower .noUi-tooltip {
+      bottom: -170%;
+      font-size: 15px;     /* Adjusts text size */
+      width: auto !important;
+      min-width: 0;
+      max-width: none;
+      white-space: nowrap; /* Prevents wrapping, optional */
+      overflow: visible;   /* Ensures the content is visible */
+      padding: 2px 2px;  
+    }
+
+    .noUi-horizontal .noUi-handle-upper .noUi-tooltip {
+      top: -170%;
+      font-size: 15px;     /* Adjusts text size */
+      width: auto !important;
+      min-width: 0;
+      max-width: none;
+      white-space: nowrap; /* Prevents wrapping, optional */
+      overflow: visible;   /* Ensures the content is visible */
+      padding: 2px 2px;  
+    }
+
+    #slider-round-3 .noUi-handle .noUi-tooltip {
+      bottom: 120%;  /* Moves tooltip above the slider */
+    }
+
+
+    .slider-row {
+      display: flex;
+      gap: 2em; /* Adjust spacing as needed */
+      align-items: flex-start; /* Align tops of sliders */
+      justify-content: center; /* Horizontally center contents */
+      align-items: center;
+      width: 100%;
+    }
+
+    .center-container {
+      display: flex;
+      justify-content: center; /* Horizontally center contents */
+      align-items: center;
+      width: 100%;
+    }
+
+
+     body {
+      background-color: #342c34;
+    }
+
   </style>
 </head>
 <body>
@@ -28,29 +123,80 @@
     method="POST"
   >
     {% csrf_token %}
+    
+    <div class="slider-row">
+      <div>
+        <label for="slider-round">Drawdown (%):</label>
+        <div class="slider-styled" id="slider-round"></div>
+      </div>
+      <div>
+        <label for="slider-round-2">Drawdown Period (Days):</label>
+        <div class="slider-styled" id="slider-round-2"></div>
+      </div>
+      <div>
+        <label for="slider-round-3">Recovery Target (%):</label>
+        <div class="slider-styled" id="slider-round-3"></div>
+      </div>
+      <div>
+        <button type="submit">Submit</button>
+      </div>
+    </div>
 
-    <label for="slider">Select Range:</label>
-    <div id="slider"></div>
-    <input type="hidden" name="range_min" id="range_min">
-    <input type="hidden" name="range_max" id="range_max">
-    <span class="slider-values">
-      <span id="min_val"></span> - <span id="max_val"></span>
-    </span>
+
+    <input type="hidden" name="drawdown_range_min" id="drawdown_range_min">
+    <input type="hidden" name="drawdown_range_max" id="drawdown_range_max">
+
+    <input type="hidden" name="duration_range_min" id="duration_range_min">
+    <input type="hidden" name="duration_range_max" id="duration_range_max">
+
+    <input type="hidden" name="recovery_target" id="recovery_target">
     <br><br>
-    <button type="submit">Submit</button>
   </form>
 
   <div id="result"></div>
   
   <script>
     // Initialize noUiSlider
-    var slider = document.getElementById('slider');
+    var slider = document.getElementById('slider-round');
     noUiSlider.create(slider, {
-      start: [25, 75],
+      start: [10, 30],
       connect: true,
       range: {
-        'min': 0,
-        'max': 100
+        'min': 5,
+        'max': 50
+      },
+      step: 1,
+      tooltips: [true, true],
+      format: {
+        to: function (value) { return Math.round(value); },
+        from: function (value) { return Number(value); }
+      }
+    });
+    
+
+    // Update hidden inputs and displayed values
+    var drawdown_min = document.getElementById('drawdown_range_min');
+    var drawdown_max = document.getElementById('drawdown_range_max');
+
+    slider.noUiSlider.on('update', function(values, handle) {
+      var min = Math.min(values[0], values[1]);
+      var max = Math.max(values[0], values[1]);
+      drawdown_min.value = min;
+      drawdown_max.value = max;
+    });
+
+    // Initialize values on page load
+    slider.noUiSlider.set([10, 30]);
+
+
+    var slider_2 = document.getElementById('slider-round-2');
+    noUiSlider.create(slider_2, {
+      start: [0, 100],
+      connect: true,
+      range: {
+        'min': [0],
+        '50%': [360],
+        'max': [3600]
       },
       step: 1,
       tooltips: [true, true],
@@ -61,22 +207,46 @@
     });
 
     // Update hidden inputs and displayed values
-    var minInput = document.getElementById('range_min');
-    var maxInput = document.getElementById('range_max');
-    var minVal = document.getElementById('min_val');
-    var maxVal = document.getElementById('max_val');
+    var duration_min = document.getElementById('duration_range_min');
+    var duration_max = document.getElementById('duration_range_max');
 
-    slider.noUiSlider.on('update', function(values, handle) {
+    slider_2.noUiSlider.on('update', function(values, handle) {
       var min = Math.min(values[0], values[1]);
       var max = Math.max(values[0], values[1]);
-      minInput.value = min;
-      maxInput.value = max;
-      minVal.textContent = min;
-      maxVal.textContent = max;
+      duration_min.value = min;
+      duration_max.value = max;
     });
 
     // Initialize values on page load
-    slider.noUiSlider.set([25, 75]);
+    slider_2.noUiSlider.set([0, 100]);
+
+    var slider_3 = document.getElementById('slider-round-3');
+    noUiSlider.create(slider_3, {
+      start: 85,
+      connect: 'lower',
+      range: {
+        'min': 5,
+        'max': 100
+      },
+      step: 1,
+      tooltips: true,
+      format: {
+        to: function (value) { return Math.round(value); },
+        from: function (value) { return Number(value); }
+      }
+    });
+    
+
+    var recovery_target= document.getElementById('recovery_target');
+
+    slider_3.noUiSlider.on('update', function(values, handle) {
+      var target = values;
+      recovery_target.value = target;
+    });
+
+    // Set the slider to a new value
+    slider_3.noUiSlider.set(85);
+
   </script>
 </body>
 </html>
