@@ -8,11 +8,16 @@ from computation.drawdown import Drawdown
 from computation.drawdowns import Drawdowns
 
 
-# TODO: validate request data, show loading, do not allow inputs while loading
-@api_view(['POST'])
+# TODO: validate request data, 
+@api_view(['POST','GET'])
 @permission_classes([AllowAny])
 @ratelimit(key='ip', rate='1/2s', block=True)
 def get_data_view(request):
+
+    # hide if go to api url
+    if request.method == "GET":
+        return redirect("/")
+
     drawdown = Drawdown(
         "SPY",
         int(request.data['drawdown_range_min']), 
