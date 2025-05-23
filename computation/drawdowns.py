@@ -1,3 +1,5 @@
+import statistics
+
 from computation.drawdown import Drawdown
 from database.rds_client import RdsClient
 
@@ -10,8 +12,11 @@ class Drawdowns:
         self.client.create_engine()
         self.drawdown_data = {}
         self.total_drawdowns = 0
+        self.avg_recovery_days = 0
+        self.median_recovery_days = 0
         self.recovery_graph = {}
         self.recovery_yearly_scatter = []
+        self.recovery_list = []
 
     def get_drawdowns(self):
         self.drawdown_data = self.client.get_drawdowns(self.drawdown)
@@ -24,9 +29,12 @@ class Drawdowns:
         for stock_data_id, drawdown_info in self.drawdown_data.items():
             total_recovery_days = (drawdown_info["recovery_date"]- drawdown_info["drawdown_date"]).days
             drawdown_info["total_recovery_days"] = total_recovery_days
-            
+            self.recovery_list.append(total_recovery_days)
             self.push_recovery_months_data(total_recovery_days)
             self.push_recovery_yearly_data(drawdown_info)
+        
+        self.avg_recovery_days = round(statistics.mean(self.recovery_list))
+        self.median_recovery_days = round(statistics.median(self.recovery_list))
 
     def push_recovery_months_data(self, total_recovery_days: int):
         total_recovery_months = round(total_recovery_days/30)

@@ -1,0 +1,174 @@
+.slider-values {
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+#slider-round, #slider-round-2, #slider-round-3 {
+    height: 10px;
+    margin: 2em 0;
+    width: 300px;
+}
+
+#slider-round-3 .noUi-connect {
+    background: #6aa56f;
+}
+
+#slider-round-2 .noUi-connect {
+    background: #616fac;
+}
+
+#slider-round .noUi-connect {
+    background: #cf6d75;
+}
+
+#slider-round-3 .noUi-base,
+#slider-round-2 .noUi-base,
+#slider-round .noUi-base {
+    background: #dfdfdf;
+}
+
+#slider-round-3 .noUi-handle,
+#slider-round-2 .noUi-handle,
+#slider-round .noUi-handle {
+    height: 18px;
+    width: 18px;
+    top: -5px;
+    right: -9px; /* half the width */
+    border-radius: 9px;
+    background: #979797;
+}
+
+.slider-styled,
+.slider-styled .noUi-handle {
+    box-shadow: none;
+}
+
+/* Hide markers on slider handles */
+.slider-styled .noUi-handle::before,
+.slider-styled .noUi-handle::after {
+    display: none;
+}
+
+.noUi-horizontal .noUi-handle-lower .noUi-tooltip {
+    bottom: -170%;
+    font-size: 15px;     /* Adjusts text size */
+    width: auto !important;
+    min-width: 0;
+    max-width: none;
+    white-space: nowrap; /* Prevents wrapping, optional */
+    overflow: visible;   /* Ensures the content is visible */
+    padding: 2px 2px;  
+}
+
+.noUi-horizontal .noUi-handle-upper .noUi-tooltip {
+    top: -170%;
+    font-size: 15px;     /* Adjusts text size */
+    width: auto !important;
+    min-width: 0;
+    max-width: none;
+    white-space: nowrap; /* Prevents wrapping, optional */
+    overflow: visible;   /* Ensures the content is visible */
+    padding: 2px 2px;  
+}
+
+#slider-round-3 .noUi-handle .noUi-tooltip {
+    bottom: 120%;  /* Moves tooltip above the slider */
+}
+
+
+.slider-row {
+    display: flex;
+    gap: 2em; /* Adjust spacing as needed */
+    align-items: flex-start; /* Align tops of sliders */
+    justify-content: center; /* Horizontally center contents */
+    align-items: center;
+    width: 100%;
+}
+
+
+
+.center-container {
+    display: flex;
+    justify-content: center; /* Horizontally center contents */
+    align-items: center;
+    width: 100%;
+}
+
+button:disabled {
+    opacity: 0.6;
+}
+
+#spinner-overlay {
+    position: fixed;
+    z-index: 9999;
+    top: 0; left: 0; right: 0; bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: all;
+}
+
+.spinner-backdrop {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: #1b151b15;
+    z-index: 1;
+}
+
+.spinner-center {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+}
+
+.slider-row button[type="submit"] {
+    background-color: #dfdfdf;
+    border: none;              /* Remove border */
+    padding: 10px 20px;        /* Some padding */
+    border-radius: 10px; 
+    font-size: 16px;    
+}
+
+.slider-container {
+    background-color: #443944;    /* Example: dark card background */
+    border-radius: 18px;          /* Rounded corners */
+    box-shadow: 0 6px 32px rgba(0,0,0,0.25), 0 1.5px 3px rgba(0,0,0,0.12); /* Soft shadow edges */
+    padding: 2em 2.5em;           /* Space inside the card */
+    margin: 2em auto;             /* Center horizontally with margin */
+    max-width: 1180px;            /* Optional: limit width */
+    box-sizing: border-box;
+    border-radius: 18px;
+}
+
+.dashboard-container {
+    margin: 2em auto;             /* Center horizontally with margin */
+    max-width: 1180px;            /* Optional: limit width */
+    box-sizing: border-box;
+    border-radius: 18px;
+}
+
+.stats-container {
+    background-color: #443944;    /* Example: dark card background */
+    border-radius: 18px;          /* Rounded corners */
+    box-shadow: 0 6px 32px rgba(0,0,0,0.25), 0 1.5px 3px rgba(0,0,0,0.12); /* Soft shadow edges */
+    padding: 2em 2.5em;           /* Space inside the card */
+    margin-left: 0;
+    width: fit-content;
+    margin-top: 1em; 
+}
+
+.main-container {
+    max-width: 1300px;  /* Same as .slider-container */
+    margin: 0 auto;     /* Center the whole block */
+}
+
+.slider-row label {
+    display: block;        /* Ensures label is on its own line */
+    margin-bottom: 2.5em;  /* Adjust this value for more/less space */
+    color:rgb(238, 195, 241);
+}
+
+
+    body {
+    background-color: #342c34;
+}

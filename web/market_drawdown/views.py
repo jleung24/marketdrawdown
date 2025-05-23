@@ -1,9 +1,12 @@
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
-from django.shortcuts import render, redirect
-from django.views.generic import View
 from rest_framework.permissions import AllowAny
+
+from django.shortcuts import render, redirect
 from django_ratelimit.decorators import ratelimit
+from django.template.loader import render_to_string
+from django.http import JsonResponse, HttpResponse
+
 from computation.drawdown import Drawdown
 from computation.drawdowns import Drawdowns
 
@@ -28,11 +31,14 @@ def get_data_view(request):
 
     drawdowns = Drawdowns(drawdown)
     drawdowns.get_drawdown_info(int(request.data['recovery_target']))
-
-    data = drawdowns.drawdown_data
+    data = {}
+    data['median'] = drawdowns.median_recovery_days
+    data['avg'] = drawdowns.avg_recovery_days
+    data['total'] = drawdowns.total_drawdowns
     drawdowns.client.cleanup()
+    html = render_to_string('html/dashboard.html', data)
 
-    return Response(data)
+    return HttpResponse(html)
 
 def main_view(request):
     return render(request, "html/main.html", locals())

@@ -1,209 +1,60 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Market Drawdown</title>
+  <link rel="stylesheet" href="{% static 'css/styles.css' %}">
   <!-- htmx CDN -->
   <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
   <!-- noUiSlider CSS and JS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.css">
   <script src="https://cdn.jsdelivr.net/npm/nouislider@15.7.1/dist/nouislider.min.js"></script>
-  <style>
-    /* #slider {
-      margin: 2em 0;
-      width: 300px;
-    } */
-    .slider-values {
-      font-weight: bold;
-      margin-left: 10px;
-    }
 
-    #slider-round, #slider-round-2, #slider-round-3 {
-      height: 10px;
-      margin: 2em 0;
-      width: 300px;
-    }
-
-    #slider-round-3 .noUi-connect {
-        background: #6aa56f;
-    }
-
-    #slider-round-2 .noUi-connect {
-        background: #616fac;
-    }
-
-    #slider-round .noUi-connect {
-        background: #cf6d75;
-    }
-
-    #slider-round-3 .noUi-base,
-    #slider-round-2 .noUi-base,
-    #slider-round .noUi-base {
-        background: #dfdfdf;
-    }
-
-    #slider-round-3 .noUi-handle,
-    #slider-round-2 .noUi-handle,
-    #slider-round .noUi-handle {
-        height: 18px;
-        width: 18px;
-        top: -5px;
-        right: -9px; /* half the width */
-        border-radius: 9px;
-        background: #979797;
-    }
-  
-    .slider-styled,
-    .slider-styled .noUi-handle {
-        box-shadow: none;
-    }
-
-    /* Hide markers on slider handles */
-    .slider-styled .noUi-handle::before,
-    .slider-styled .noUi-handle::after {
-        display: none;
-    }
-
-    .noUi-horizontal .noUi-handle-lower .noUi-tooltip {
-      bottom: -170%;
-      font-size: 15px;     /* Adjusts text size */
-      width: auto !important;
-      min-width: 0;
-      max-width: none;
-      white-space: nowrap; /* Prevents wrapping, optional */
-      overflow: visible;   /* Ensures the content is visible */
-      padding: 2px 2px;  
-    }
-
-    .noUi-horizontal .noUi-handle-upper .noUi-tooltip {
-      top: -170%;
-      font-size: 15px;     /* Adjusts text size */
-      width: auto !important;
-      min-width: 0;
-      max-width: none;
-      white-space: nowrap; /* Prevents wrapping, optional */
-      overflow: visible;   /* Ensures the content is visible */
-      padding: 2px 2px;  
-    }
-
-    #slider-round-3 .noUi-handle .noUi-tooltip {
-      bottom: 120%;  /* Moves tooltip above the slider */
-    }
-
-
-    .slider-row {
-      display: flex;
-      gap: 2em; /* Adjust spacing as needed */
-      align-items: flex-start; /* Align tops of sliders */
-      justify-content: center; /* Horizontally center contents */
-      align-items: center;
-      width: 100%;
-    }
-
-    .center-container {
-      display: flex;
-      justify-content: center; /* Horizontally center contents */
-      align-items: center;
-      width: 100%;
-    }
-
-    button:disabled {
-      opacity: 0.6;
-    }
-
-    #spinner-overlay {
-      position: fixed;
-      z-index: 9999;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      pointer-events: all;
-    }
-
-    .spinner-backdrop {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: #1b151b15;
-      z-index: 1;
-    }
-
-    .spinner-center {
-      position: relative;
-      z-index: 2;
-      text-align: center;
-    }
-
-    .slider-row button[type="submit"] {
-      background-color: #dfdfdf;
-      border: none;              /* Remove border */
-      padding: 10px 20px;        /* Some padding */
-      border-radius: 10px; 
-      font-size: 16px;    
-    }
-
-    .slider-container {
-      background-color: #443944;    /* Example: dark card background */
-      border-radius: 18px;          /* Rounded corners */
-      box-shadow: 0 6px 32px rgba(0,0,0,0.25), 0 1.5px 3px rgba(0,0,0,0.12); /* Soft shadow edges */
-      padding: 2em 2.5em;           /* Space inside the card */
-      margin: 2em auto;             /* Center horizontally with margin */
-      max-width: 1100px;            /* Optional: limit width */
-    }
-
-    .slider-row label {
-      display: block;        /* Ensures label is on its own line */
-      margin-bottom: 2.5em;  /* Adjust this value for more/less space */
-      color:rgb(238, 195, 241);
-    }
-
-
-     body {
-      background-color: #342c34;
-    }
-
-  </style>
 </head>
 <body>
-  <form 
-    hx-post="/get_data/"
-    hx-target="#result"
-    hx-swap="innerHTML"
-    id="rangeForm"
-    method="POST"
-  >
-    {% csrf_token %}
-    <div class="slider-container">
-    <div class="slider-row">
-      <div>
-        <label for="slider-round">Drawdown (%)</label>
-        <div class="slider-styled" id="slider-round"></div>
+  <div class="main-container">
+    <form 
+      hx-post="/get_data/"
+      hx-target="#dashboard"
+      hx-swap="innerHTML"
+      id="rangeForm"
+      method="POST"
+    >
+      {% csrf_token %}
+      <div class="slider-container">
+      <div class="slider-row">
+        <div>
+          <label for="slider-round">Drawdown (%)</label>
+          <div class="slider-styled" id="slider-round"></div>
+        </div>
+        <div>
+          <label for="slider-round-2" title="Days since peak, from drawdown">Drawdown Period (Days)</label>
+          <div class="slider-styled" id="slider-round-2"></div>
+        </div>
+        <div>
+          <label for="slider-round-3">Recovery Target (%)</label>
+          <div class="slider-styled" id="slider-round-3"></div>
+        </div>
+        <div>
+          <button type="submit" id="submitBtn">Calculate</button>
+        </div>
       </div>
-      <div>
-        <label for="slider-round-2">Drawdown Period (Days)</label>
-        <div class="slider-styled" id="slider-round-2"></div>
       </div>
-      <div>
-        <label for="slider-round-3">Recovery Target (%)</label>
-        <div class="slider-styled" id="slider-round-3"></div>
-      </div>
-      <div>
-        <button type="submit" id="submitBtn">Calculate</button>
-      </div>
+      <input type="hidden" name="drawdown_range_min" id="drawdown_range_min">
+      <input type="hidden" name="drawdown_range_max" id="drawdown_range_max">
+
+      <input type="hidden" name="duration_range_min" id="duration_range_min">
+      <input type="hidden" name="duration_range_max" id="duration_range_max">
+
+      <input type="hidden" name="recovery_target" id="recovery_target">
+    </form>
+
+    <div class="dashboard-container">
+      <div id="dashboard"></div>
     </div>
-    </div>
-    <input type="hidden" name="drawdown_range_min" id="drawdown_range_min">
-    <input type="hidden" name="drawdown_range_max" id="drawdown_range_max">
+  </div>
 
-    <input type="hidden" name="duration_range_min" id="duration_range_min">
-    <input type="hidden" name="duration_range_max" id="duration_range_max">
-
-    <input type="hidden" name="recovery_target" id="recovery_target">
-    <br><br>
-  </form>
-
-  <div id="result"></div>
-  
   <div id="spinner-overlay" style="display:none;">
   <div class="spinner-backdrop"></div>
   <div class="spinner-center">
@@ -227,7 +78,8 @@
       connect: true,
       range: {
         'min': 5,
-        'max': 50
+        '85': 50,
+        'max': 100
       },
       step: 1,
       tooltips: [true, true],
@@ -255,7 +107,7 @@
 
     var slider_2 = document.getElementById('slider-round-2');
     noUiSlider.create(slider_2, {
-      start: [0, 100],
+      start: [0, 300],
       connect: true,
       range: {
         'min': [0],
@@ -282,7 +134,7 @@
     });
 
     // Initialize values on page load
-    slider_2.noUiSlider.set([0, 100]);
+    slider_2.noUiSlider.set([0, 300]);
 
     var slider_3 = document.getElementById('slider-round-3');
     noUiSlider.create(slider_3, {
