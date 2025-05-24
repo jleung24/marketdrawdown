@@ -138,7 +138,6 @@ button:disabled {
     display: flex;
     flex-wrap: wrap;
     gap: 2em;
-    flex-direction: column;
     /* border: 2px dashed red !important;
     background: rgba(255,0,0,0.03);  */
 }
@@ -155,6 +154,21 @@ button:disabled {
     width: fit-content;
     height: fit-content;
     color: #fddbff;
+    display: flex;
+    flex-direction: row;
+}
+
+.stats-value {
+    font-weight: bold;
+    font-size: 20px;
+    display: flex;
+    justify-content: center;
+}
+
+.stats-item {
+    margin: 0.5em 1em;
+    display: flex;
+    flex-direction: column;
 }
 
 .scatter-container {
@@ -167,12 +181,9 @@ button:disabled {
     color: #fddbff;
 }
 
-.stats-item {
-    margin: 0.5em auto;
-}
-
 .main-container {
     max-width: 1300px;  /* Same as .slider-container */
+    min-width: 1300px;
     margin: 0 auto;     /* Center the whole block */
 }
 
@@ -182,7 +193,25 @@ button:disabled {
     color:#fddbff;
 }
 
+.slider-row-label-bold {
+    font-size: 20px;
+    font-weight: bold;
+    margin-right: 0.3em;
+}
 
-    body {
+body {
     background-color: #342c34;
 }
+
+.button-column {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5em;
+}
+
+.dropdown {
+    display: flex;
+    justify-content: center;
+}
+
+

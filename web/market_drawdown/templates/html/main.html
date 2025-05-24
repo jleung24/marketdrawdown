@@ -6,7 +6,6 @@
   <title>Market Drawdown</title>
   <link rel="stylesheet" href="{% static 'css/styles.css' %}">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation/dist/chartjs-plugin-annotation.min.js"></script>
   <!-- htmx CDN -->
   <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
   <!-- noUiSlider CSS and JS -->
@@ -20,6 +19,7 @@
       hx-post="/get_data/"
       hx-target="#dashboard"
       hx-swap="innerHTML"
+      hx-include="#index-dropdown"
       id="rangeForm"
       method="POST"
     >
@@ -27,18 +27,30 @@
       <div class="slider-container">
       <div class="slider-row">
         <div>
-          <label for="slider-round">Drawdown (%)</label>
+          <label>
+            <span class="slider-row-label-bold">Drawdown </span> %
+          </label>
           <div class="slider-styled" id="slider-round"></div>
         </div>
         <div>
-          <label for="slider-round-2" title="Days since peak, from drawdown">Drawdown Period (Days)</label>
+          <label>
+            <span class="slider-row-label-bold">Drawdown Period </span> days
+          </label>
           <div class="slider-styled" id="slider-round-2"></div>
         </div>
         <div>
-          <label for="slider-round-3">Recovery Target (%)</label>
+          <label>
+            <span class="slider-row-label-bold">Recovery Target </span> %
+          </label>
           <div class="slider-styled" id="slider-round-3"></div>
         </div>
-        <div>
+        <div class="button-column">
+          <div class="dropdown">
+            <select style="width: fit-content; border-radius: 5px; " id="index-dropdown" name="index-dropdown">
+                <option value="QQQ">QQQ</option>
+                <option value="SPY" selected>SPY</option>
+            </select>
+          </div>
           <button type="submit" id="submitBtn">Calculate</button>
         </div>
       </div>
@@ -108,7 +120,7 @@
 
     var slider_2 = document.getElementById('slider-round-2');
     noUiSlider.create(slider_2, {
-      start: [0, 2000],
+      start: [0, 1000],
       connect: true,
       range: {
         'min': [0],
@@ -135,7 +147,7 @@
     });
 
     // Initialize values on page load
-    slider_2.noUiSlider.set([0, 2000]);
+    slider_2.noUiSlider.set([0, 1000]);
 
     var slider_3 = document.getElementById('slider-round-3');
     noUiSlider.create(slider_3, {

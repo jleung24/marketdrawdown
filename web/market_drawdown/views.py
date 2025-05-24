@@ -11,7 +11,6 @@ from computation.drawdown import Drawdown
 from computation.drawdowns import Drawdowns
 
 
-# TODO: validate request data, toggle for spy/qqq, show dataset range (dates)
 @api_view(['POST','GET'])
 @permission_classes([AllowAny])
 @ratelimit(key='ip', rate='1/2s', block=True)
@@ -22,7 +21,7 @@ def get_data_view(request):
         return redirect("/")
 
     drawdown = Drawdown(
-        "SPY",
+        str(request.data['index-dropdown']),
         int(request.data['drawdown_range_min']), 
         int(request.data['drawdown_range_max']),
         int(request.data['duration_range_min']),
