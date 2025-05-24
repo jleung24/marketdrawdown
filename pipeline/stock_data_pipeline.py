@@ -1,5 +1,4 @@
 from database.pydantic_models import *
-from database.snowflake_client import SnowflakeClient
 from database.rds_client import RdsClient
 from alpha_vantage.alpha_vantage_client import AlphaVantageClient
 
@@ -9,10 +8,7 @@ class StockDataPipeline():
     def __init__(self, client: str):
         self.alpha_vantage = AlphaVantageClient()
 
-        if client == "snowflake":
-            self.client = SnowflakeClient()
-        else:
-            self.client = RdsClient()
+        self.client = RdsClient()
         
         self.client.create_engine()
         self.stock_data = None
@@ -22,7 +18,7 @@ class StockDataPipeline():
         data_dict = {}
 
         for date, data in reversed(self.stock_data['Time Series (Daily)'].items()):           
-            stock_data_id = f"{date.replace("-", "")}_{stock_symbol}"
+            stock_data_id = f"{date.replace('-', '')}_{stock_symbol}"
 
             if self.client.stock_data_id_exists(stock_data_id):
                 continue
@@ -61,4 +57,4 @@ class StockDataPipeline():
 
 if __name__ == "__main__":
     pipeline = StockDataPipeline("rds")
-    pipeline.update_database("SPY")
+    pipeline.update_database("QQQ")
