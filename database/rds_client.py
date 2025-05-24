@@ -116,7 +116,7 @@ class RdsClient:
     def no_stock_data(self, stock_symbol: str):
         if not self.stock_data_id_list:
             self.cache_stock_data_ids()
-
+        
         if any(stock_symbol in id for id in self.stock_data_id_list):
             return False    
         

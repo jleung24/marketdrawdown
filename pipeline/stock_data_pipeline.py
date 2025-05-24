@@ -16,6 +16,7 @@ class StockDataPipeline():
     def update_database(self, stock_symbol: str):
         self.stock_data = self.alpha_vantage.get_data(stock_symbol)
         data_dict = {}
+        first = True
 
         for date, data in reversed(self.stock_data['Time Series (Daily)'].items()):           
             stock_data_id = f"{date.replace('-', '')}_{stock_symbol}"
@@ -32,7 +33,7 @@ class StockDataPipeline():
             data_dict['close'] = float(data['4. close'])
             data_dict['volume'] = float(data['5. volume'])
             
-            if self.client.no_stock_data(stock_symbol):
+            if self.client.no_stock_data(stock_symbol) and first:
                 data_dict['local_max_id'] = stock_data_id
             else:
                 data_dict['local_max_id'] = self.get_local_max_id(data_dict)
@@ -41,6 +42,7 @@ class StockDataPipeline():
                 pass
 
             self.client.insert_to_stock_data_table(pydantic_data)
+            first = False
         
         self.client.cleanup()
 
@@ -48,7 +50,6 @@ class StockDataPipeline():
         prev_max_id = self.client.get_previous_max(data_dict['date'], data_dict['stock_symbol'])
         prev_max_data = self.client.get_stock_data(prev_max_id)
         prev_max = float(prev_max_data[4])
-
         if prev_max > data_dict['high']:
             return prev_max_id
         
