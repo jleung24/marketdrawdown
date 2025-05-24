@@ -135,6 +135,16 @@ button:disabled {
     max-width: 1180px;            /* Optional: limit width */
     box-sizing: border-box;
     border-radius: 18px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2em;
+    flex-direction: column;
+    /* border: 2px dashed red !important;
+    background: rgba(255,0,0,0.03);  */
+}
+
+.dashboard-container > * {
+    flex: none; /* Prevents children from growing or shrinking */
 }
 
 .stats-container {
@@ -143,6 +153,7 @@ button:disabled {
     box-shadow: 0 6px 32px #00000040, 0 1.5px 3px #0000001f; /* Soft shadow edges */
     padding: 1em 1em;           /* Space inside the card */
     width: fit-content;
+    height: fit-content;
     color: #fddbff;
 }
 
@@ -154,7 +165,6 @@ button:disabled {
     width: fit-content;
     height: fit-content;
     color: #fddbff;
-    margin-top: 2em;
 }
 
 .stats-item {

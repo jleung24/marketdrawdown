@@ -1,19 +1,22 @@
-<div class="stats-container">
-    <div class="stats-item">
-        <span class="stats-label">Median Recovery Time:</span>
-        <span class="stats-value">{{ median }} days</span>
+<div class="dashboard-container">
+    <div class="stats-container">
+        <div class="stats-item">
+            <span class="stats-label">Median Recovery Time:</span>
+            <span class="stats-value">{{ median }} days</span>
+        </div>
+        <div class="stats-item">
+            <span class="stats-label">Average Recovery Time:</span>
+            <span class="stats-value">{{ avg }} days</span>
+        </div>
+        <div class="stats-item">
+            <span class="stats-label">Total Drawdowns:</span>
+            <span class="stats-value">{{ total }}</span>
+        </div>
     </div>
-    <div class="stats-item">
-        <span class="stats-label">Average Recovery Time:</span>
-        <span class="stats-value">{{ avg }} days</span>
-    </div>
-    <div class="stats-item">
-        <span class="stats-label">Total Drawdowns:</span>
-        <span class="stats-value">{{ total }}</span>
-    </div>
-</div>
 
-<div class="scatter-container">
-    <canvas id="scatterChart" width="600" height="400"></canvas>
-    {{ scatter_points|json_script:"scatter-data" }}
+    <div class="scatter-container">
+        <canvas id="scatterChart" width="600" height="400"></canvas>
+        {{ scatter_points|json_script:"scatter-data" }}
+    </div>
+
 </div>
