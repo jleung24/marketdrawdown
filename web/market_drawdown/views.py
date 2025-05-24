@@ -11,7 +11,7 @@ from computation.drawdown import Drawdown
 from computation.drawdowns import Drawdowns
 
 
-# TODO: validate request data, 
+# TODO: validate request data, toggle for spy/qqq, show dataset range (dates)
 @api_view(['POST','GET'])
 @permission_classes([AllowAny])
 @ratelimit(key='ip', rate='1/2s', block=True)
@@ -31,10 +31,12 @@ def get_data_view(request):
 
     drawdowns = Drawdowns(drawdown)
     drawdowns.get_drawdown_info(int(request.data['recovery_target']))
-    data = {}
-    data['median'] = drawdowns.median_recovery_days
-    data['avg'] = drawdowns.avg_recovery_days
-    data['total'] = drawdowns.total_drawdowns
+    data = {
+        'median': drawdowns.median_recovery_days,
+        'avg': drawdowns.avg_recovery_days,
+        'total': drawdowns.total_drawdowns,
+        'scatter_points': drawdowns.recovery_yearly_scatter
+    }
     drawdowns.client.cleanup()
     html = render_to_string('html/dashboard.html', data)
 

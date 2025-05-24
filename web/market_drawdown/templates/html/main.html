@@ -5,6 +5,8 @@
   <meta charset="UTF-8">
   <title>Market Drawdown</title>
   <link rel="stylesheet" href="{% static 'css/styles.css' %}">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation/dist/chartjs-plugin-annotation.min.js"></script>
   <!-- htmx CDN -->
   <script src="https://unpkg.com/htmx.org@2.0.4/dist/htmx.min.js"></script>
   <!-- noUiSlider CSS and JS -->
@@ -65,7 +67,7 @@
           <animate attributeName="stroke" values="#6aa56f;#616fac;#cf6d75" dur="3s" repeatCount="indefinite"/>
         </circle>
       </svg>
-      <div style="color:#fff; margin-top:1em;">Loading...</div>
+      <div style="color:#fddbff; margin-top:1em;">Loading...</div>
     </div>
   </div>
 
@@ -74,7 +76,7 @@
     // Initialize noUiSlider
     var slider = document.getElementById('slider-round');
     noUiSlider.create(slider, {
-      start: [10, 30],
+      start: [15, 30],
       connect: true,
       range: {
         'min': 5,
@@ -102,12 +104,12 @@
     });
 
     // Initialize values on page load
-    slider.noUiSlider.set([10, 30]);
+    slider.noUiSlider.set([15, 30]);
 
 
     var slider_2 = document.getElementById('slider-round-2');
     noUiSlider.create(slider_2, {
-      start: [0, 300],
+      start: [0, 2000],
       connect: true,
       range: {
         'min': [0],
@@ -134,7 +136,7 @@
     });
 
     // Initialize values on page load
-    slider_2.noUiSlider.set([0, 300]);
+    slider_2.noUiSlider.set([0, 2000]);
 
     var slider_3 = document.getElementById('slider-round-3');
     noUiSlider.create(slider_3, {
@@ -189,6 +191,99 @@
     document.body.addEventListener('htmx:responseError', function(evt) {
       document.getElementById('submitBtn').disabled = false;
     });
+  </script>
+
+  <script>
+    function renderScatterChart() {
+      const dataScript = document.getElementById('scatter-data');
+      if (!dataScript) return;
+      const scatterPoints = JSON.parse(dataScript.textContent);
+      const ctx = document.getElementById('scatterChart');
+      if (!ctx) return;
+      if (window.scatterChartInstance) {
+        window.scatterChartInstance.destroy();
+      }
+
+      function getRegressionLine(points) {
+          // points: [{x: ..., y: ...}, ...]
+          const n = points.length;
+          const sumX = points.reduce((sum, p) => sum + p.x, 0);
+          const sumY = points.reduce((sum, p) => sum + p.y, 0);
+          const sumXY = points.reduce((sum, p) => sum + p.x * p.y, 0);
+          const sumXX = points.reduce((sum, p) => sum + p.x * p.x, 0);
+
+          const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+          const intercept = (sumY - slope * sumX) / n;
+
+          // Get min and max x for the line endpoints
+          const xs = points.map(p => p.x);
+          const minX = Math.min(...xs);
+          const maxX = Math.max(...xs);
+
+          // Two points for the regression line
+          return [
+              {x: minX, y: slope * minX + intercept},
+              {x: maxX, y: slope * maxX + intercept}
+          ];
+      }
+
+      const regressionLine = getRegressionLine(scatterPoints);
+
+      window.scatterChartInstance = new Chart(ctx, {
+        type: 'scatter',
+        data: {
+          datasets: [
+            {
+              label: 'Recovery Points',
+              data: scatterPoints,
+              backgroundColor: 'rgba(97, 111, 172, 0.7)',
+              pointRadius: 5
+            },
+            {
+              label: 'regression',
+              data: regressionLine,
+              type: 'line',
+              borderColor: '#cf6d75',
+              borderWidth: 2,
+              fill: false,
+              pointRadius: 0,
+              tension: 0, // straight lines between points
+              order: 1,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Recovery Time vs Year', color: '#fddbff' },
+          },
+          scales: {
+            x: { 
+              title: { display: true, text: 'Year', color: '#fddbff'}, 
+              ticks: {
+                color: '#fddbff',
+                callback: function(value) {
+                  return value.toString().replace(/,/g, '');
+                } 
+              }
+          },
+            y: { 
+              min: 0,
+              title: { display: true, text: 'Recovery Time (Days)', color: '#fddbff'}, 
+              ticks: {
+                color: '#fddbff',
+              }
+            }
+          }
+        }
+      });
+    }
+
+    // Run after every HTMX swap
+    document.body.addEventListener('htmx:afterSwap', renderScatterChart);
+    // Run on initial page load
+    document.addEventListener('DOMContentLoaded', renderScatterChart);
   </script>
 
 </body>

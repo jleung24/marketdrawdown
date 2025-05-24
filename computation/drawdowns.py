@@ -46,4 +46,5 @@ class Drawdowns:
 
     def push_recovery_yearly_data(self, drawdown_info: dict):
         year = drawdown_info['drawdown_date'].year
-        self.recovery_yearly_scatter.append([year, drawdown_info['total_recovery_days']])
+        self.recovery_yearly_scatter.append({'x': year, 'y': drawdown_info['total_recovery_days']})
+
