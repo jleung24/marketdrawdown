@@ -122,7 +122,7 @@ class RdsClient:
             """)
             for row in connection.execute(statement):
                 return True
-                
+            
             return False
         
     def get_split_factor(self, stock_symbol: str, date: str):
@@ -133,6 +133,8 @@ class RdsClient:
                 AND date <= '{date}'
             """)
             for row in connection.execute(statement):
+
+                # row[0] = none if table empty
                 if row[0]:
                     return row[0]
                 

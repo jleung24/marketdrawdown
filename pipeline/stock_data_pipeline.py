@@ -18,8 +18,6 @@ class StockDataPipeline():
         self.stock_data = self.alpha_vantage.get_data(stock_symbol)
         self.split_data =self.alpha_vantage.get_splits(stock_symbol)
 
-        print(self.split_data)
-
         if self.split_data['data'] != []:
             self.insert_split_data(stock_symbol)
         
