@@ -77,6 +77,21 @@ class RdsClient:
             )
             connection.commit()
     
+    def insert_to_split_data_table(self, split_data: SplitData):
+        with self.engine.connect() as connection:
+            connection.execute(
+                text("""
+                    INSERT INTO split_data (date, stock_symbol, split_factor)
+                    SELECT :date, :stock_symbol, :split_factor;
+                """),
+                {
+                    "date": split_data.date,
+                    "stock_symbol": split_data.stock_symbol,
+                    "split_factor": split_data.split_factor
+                }
+            )
+            connection.commit()
+    
     def clear_table(self, table_name: str):
         with self.engine.connect() as connection:
             statement = text(f"DELETE FROM {table_name};")
@@ -97,6 +112,31 @@ class RdsClient:
             return True
 
         return False
+    
+    def split_data_exists(self, stock_symbol: str, date: str):
+        with self.engine.connect() as connection:
+            statement = text(f"""
+                SELECT * FROM split_data 
+                WHERE stock_symbol = '{stock_symbol}'
+                AND date = '{date}'
+            """)
+            for row in connection.execute(statement):
+                return True
+                
+            return False
+        
+    def get_split_factor(self, stock_symbol: str, date: str):
+        with self.engine.connect() as connection:
+            statement = text(f"""
+                SELECT exp(sum(ln(split_factor))) FROM split_data 
+                WHERE stock_symbol = '{stock_symbol}'
+                AND date <= '{date}'
+            """)
+            for row in connection.execute(statement):
+                if row[0]:
+                    return row[0]
+                
+                return 1
     
     def cache_stock_data_ids(self):
         self.stock_data_id_list = []

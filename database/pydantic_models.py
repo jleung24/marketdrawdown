@@ -10,3 +10,8 @@ class StockData(BaseModel):
     close: float
     volume: float
     local_max_id: str = Field(pattern=r'^\d{8}_.*')
+
+class SplitData(BaseModel):
+    date: str = Field(pattern=r'^\d{4}-\d{2}-\d{2}$')
+    stock_symbol: str
+    split_factor: float

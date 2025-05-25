@@ -19,6 +19,12 @@ class AlphaVantageClient:
 
         return self.data
 
+    def get_splits(self, stock_symbol: str) -> dict:
+        url = f"https://www.alphavantage.co/query?function=SPLITS&symbol={stock_symbol}&apikey={self.api_key}"
+        self.data = requests.get(url).json()
+
+        return self.data
+
     def write_data_to_file(self):
         if self.data:
             with open('data.json', 'w', encoding='utf-8') as f:
