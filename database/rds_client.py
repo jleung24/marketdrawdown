@@ -193,10 +193,10 @@ class RdsClient:
                 ) AS sd2 
                 ON sd2.stock_data_id = sd1.local_max_id
                 WHERE sd1.stock_symbol = :stock_symbol
-                AND ((sd2.high - sd1.low) / sd2.high)*100 > :min
-                AND ((sd2.high - sd1.low) / sd2.high)*100 < :max
-                AND ABS(sd1.date - sd2.date) > :duration_days_min
-                AND ABS(sd1.date - sd2.date) < :duration_days_max
+                AND ((sd2.high - sd1.low) / sd2.high)*100 >= :min
+                AND ((sd2.high - sd1.low) / sd2.high)*100 <= :max
+                AND ABS(sd1.date - sd2.date) >= :duration_days_min
+                AND ABS(sd1.date - sd2.date) <= :duration_days_max
             """)
 
             for row in connection.execute(statement, {
@@ -222,7 +222,7 @@ class RdsClient:
                 statement = text("""
                     SELECT MIN(date)
                     FROM stock_data
-                    WHERE high > :target
+                    WHERE high >= :target
                     AND date > :drawdown_date
                     AND stock_symbol = :stock_symbol
                 """)

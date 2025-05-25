@@ -19,27 +19,46 @@ def get_data_view(request):
     # hide if go to api url
     if request.method == "GET":
         return redirect("/")
+    
+    if not data_ok(request):
+        html = render_to_string('html/error.html')
+        return HttpResponse(html)
 
-    drawdown = Drawdown(
-        str(request.data['index-dropdown']),
-        int(request.data['drawdown_range_min']), 
-        int(request.data['drawdown_range_max']),
-        int(request.data['duration_range_min']),
-        int(request.data['duration_range_max'])
-    )
+    try:
+        drawdown = Drawdown(
+            str(request.data['index-dropdown']),
+            int(request.data['drawdown_range_min']), 
+            int(request.data['drawdown_range_max']),
+            int(request.data['duration_range_min']),
+            int(request.data['duration_range_max'])
+        )
 
-    drawdowns = Drawdowns(drawdown)
-    drawdowns.get_drawdown_info(int(request.data['recovery_target']))
-    data = {
-        'median': drawdowns.median_recovery_days,
-        'avg': drawdowns.avg_recovery_days,
-        'total': drawdowns.total_drawdowns,
-        'scatter_points': drawdowns.recovery_yearly_scatter
-    }
-    drawdowns.client.cleanup()
-    html = render_to_string('html/dashboard.html', data)
+        drawdowns = Drawdowns(drawdown)
+        drawdowns.get_drawdown_info(int(request.data['recovery_target']))
+        data = {
+            'median': drawdowns.median_recovery_days,
+            'avg': drawdowns.avg_recovery_days,
+            'total': drawdowns.total_drawdowns,
+            'scatter_points': drawdowns.recovery_yearly_scatter
+        }
+        drawdowns.client.cleanup()
+        html = render_to_string('html/dashboard.html', data)
+    except:
+        html = render_to_string('html/error.html')
 
     return HttpResponse(html)
+
+def data_ok(request):
+    conditions = [
+        str(request.data['index-dropdown']) in ['QQQ', 'SPY'],
+        int(request.data['drawdown_range_min']) < int(request.data['drawdown_range_max']),
+        int(request.data['duration_range_min']) < int(request.data['duration_range_max']),
+        int(request.data['recovery_target']) <= 100 and int(request.data['recovery_target']) >= 5,
+        int(request.data['drawdown_range_min']) >= 5 and int(request.data['drawdown_range_max']) <= 100,
+        int(request.data['duration_range_min']) >= 0 and int(request.data['duration_range_max']) <= 9999
+    ]
+
+    return all(conditions)
 
 def main_view(request):
     return render(request, "html/main.html", locals())

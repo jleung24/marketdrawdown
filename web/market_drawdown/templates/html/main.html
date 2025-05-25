@@ -95,6 +95,7 @@
         'max': 100
       },
       step: 1,
+      margin: 1,
       tooltips: [true, true],
       format: {
         to: function (value) { return Math.round(value); },
@@ -124,10 +125,12 @@
       connect: true,
       range: {
         'min': [0],
-        '50%': [360],
-        'max': [3600]
+        '50%': [365],
+        '90%': [3650],
+        'max': [9999]
       },
       step: 1,
+      margin: 1,
       tooltips: [true, true],
       format: {
         to: function (value) { return Math.round(value); },
