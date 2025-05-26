@@ -23,6 +23,7 @@ class Drawdowns:
         self.total_drawdowns = len(self.drawdown_data)
     
     def get_drawdown_info(self, recovery_percentage: int):
+        self.reset_data()
         self.get_drawdowns()
         self.drawdown_data = self.client.get_recovery_data(self.drawdown_data, self.drawdown, recovery_percentage)
 
@@ -51,3 +52,12 @@ class Drawdowns:
     def cleanup(self):
         for attr in list(self.__dict__):
             setattr(self, attr, None)
+    
+    def reset_data(self):
+        self.drawdown_data = {}
+        self.total_drawdowns = 0
+        self.avg_recovery_days = 0
+        self.median_recovery_days = 0
+        self.recovery_graph = {}
+        self.recovery_yearly_scatter = []
+        self.recovery_list = []
