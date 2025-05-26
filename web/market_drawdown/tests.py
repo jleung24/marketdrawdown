@@ -1,4 +1,5 @@
 import tracemalloc
+import gc
 
 from django.test import TestCase
 from rest_framework.test import APITestCase
@@ -15,10 +16,22 @@ class MemoryTest(APITestCase):
             'duration_range_max': '1000',
             'recovery_target': '85'
         }
+        
+        # Warm-up requests
+        for _ in range(5):
+            self.client.post(url, data, format='json')
+
         tracemalloc.start()
+        gc.collect()
+        self.client.post(url, data, format='json')
+        gc.collect()
         snapshot1 = tracemalloc.take_snapshot()
-        response = self.client.post(url, data, format='json')
+
+        for _ in range(10):
+            self.client.post(url, data, format='json')
+        gc.collect()
         snapshot2 = tracemalloc.take_snapshot()
+
         stats = snapshot2.compare_to(snapshot1, 'lineno')
         for stat in stats[:10]:
             print(stat)

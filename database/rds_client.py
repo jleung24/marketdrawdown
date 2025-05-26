@@ -8,34 +8,7 @@ from helpers.read_config import read_config
 from database.pydantic_models import *
 from computation.drawdown import Drawdown
 
-
-config = read_config('RDS')
-
-
-class RdsClient:
-
-    def __init__(self):
-        self.engine = None
-        self.stock_data_id_list = []
-
-    def create_engine(self):
-        password = json.loads(self.get_secret())['password']
-        url = URL.create(
-            drivername="postgresql+psycopg2",
-            username=config['User'],
-            password=password,
-            host=config['Host'],
-            port=config['Port'],
-            database='market_data'
-        )
-        self.engine = create_engine(url)
-
-    def cleanup(self):
-        self.engine.dispose()
-        for attr in list(self.__dict__):
-            setattr(self, attr, None)
-
-    def get_secret(self):
+def get_secret():
         secret_name = config["SecretName"]
         region_name = "us-west-1"
 
@@ -57,6 +30,24 @@ class RdsClient:
 
         secret = get_secret_value_response['SecretString']
         return secret
+
+config = read_config('RDS')
+password = json.loads(get_secret())['password']
+url = URL.create(
+    drivername="postgresql+psycopg2",
+    username=config['User'],
+    password=password,
+    host=config['Host'],
+    port=config['Port'],
+    database='market_data'
+)
+engine = create_engine(url)
+
+class RdsClient:
+
+    def __init__(self):
+        self.engine = engine
+        self.stock_data_id_list = []
 
     def insert_to_stock_data_table(self,stock_data: StockData):
         with self.engine.connect() as connection:

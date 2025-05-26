@@ -9,7 +9,6 @@ class Drawdowns:
     def __init__(self, drawdown: Drawdown):
         self.drawdown = drawdown
         self.client = RdsClient()
-        self.client.create_engine()
         self.drawdown_data = {}
         self.total_drawdowns = 0
         self.avg_recovery_days = 0
