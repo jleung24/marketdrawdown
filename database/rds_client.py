@@ -32,6 +32,8 @@ class RdsClient:
 
     def cleanup(self):
         self.engine.dispose()
+        for attr in list(self.__dict__):
+            setattr(self, attr, None)
 
     def get_secret(self):
         secret_name = config["SecretName"]

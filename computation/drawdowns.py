@@ -48,3 +48,6 @@ class Drawdowns:
         year = drawdown_info['drawdown_date'].year
         self.recovery_yearly_scatter.append({'x': year, 'y': drawdown_info['total_recovery_days']})
 
+    def cleanup(self):
+        for attr in list(self.__dict__):
+            setattr(self, attr, None)

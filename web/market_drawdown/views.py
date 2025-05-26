@@ -42,6 +42,7 @@ def get_data_view(request):
             'scatter_points': drawdowns.recovery_yearly_scatter
         }
         drawdowns.client.cleanup()
+        drawdowns.cleanup()
         html = render_to_string('html/dashboard.html', data)
     except:
         html = render_to_string('html/error.html')
