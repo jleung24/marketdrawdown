@@ -1,3 +1,5 @@
+import gc
+
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
@@ -41,9 +43,12 @@ def get_data_view(request):
             'total': drawdowns.total_drawdowns,
             'scatter_points': drawdowns.recovery_yearly_scatter
         }
+        html = render_to_string('html/dashboard.html', data)
         drawdowns.client.cleanup()
         drawdowns.cleanup()
-        html = render_to_string('html/dashboard.html', data)
+        del drawdowns
+        del data
+        gc.collect()  # Force garbage collection
     except:
         html = render_to_string('html/error.html')
 
