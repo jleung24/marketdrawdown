@@ -206,34 +206,44 @@ class RdsClient:
             
             return drawdown_dict
     
+    # perplexity.ai just doubled the speed of this function :D
     def get_recovery_data(self, drawdown_data: dict, drawdown: Drawdown, recovery_percentage: int) -> dict:
-        data = drawdown_data.copy()
-        for stock_data_id, drawdown_info in drawdown_data.items():
-            target = self.calculate_target(drawdown_info, recovery_percentage)
+        
+        drawdown_list = []
+        for stock_data_id, info in drawdown_data.items():
+            target = self.calculate_target(info, recovery_percentage)
+            drawdown_list.append((stock_data_id, info["drawdown_date"], target))
 
-            with self.engine.connect() as connection:
-                statement = text("""
-                    SELECT MIN(date)
-                    FROM stock_data
-                    WHERE high >= :target
-                    AND date > :drawdown_date
-                    AND stock_symbol = :stock_symbol
-                """)
+        with self.engine.connect() as connection:
 
-                for row in connection.execute(statement, {
-                    "stock_symbol": drawdown.stock_symbol,
-                    "target": target,
-                    "drawdown_date": drawdown_info["drawdown_date"]
-                }):
-                    recovery_date = row[0]
-                    data[stock_data_id]["recovery_date"] = recovery_date
+            values_clause = ", ".join(
+                f"('{stock_data_id}', '{drawdown_date}'::date, {target})"
+                for stock_data_id, drawdown_date, target in drawdown_list
+            )
 
-                    if not recovery_date:
-                        del data[stock_data_id]
-                    
-                    # print(f"{drawdown_info['drawdown_date']} {drawdown_info['low']}    {row[0]} {target}")
+            statement = text(f"""
+                WITH drawdowns(stock_data_id, drawdown_date, target) AS (
+                    VALUES {values_clause}
+                )
+                SELECT d.stock_data_id, MIN(s.date) AS recovery_date
+                FROM drawdowns d
+                JOIN stock_data s
+                    ON s.stock_symbol = :stock_symbol
+                    AND s.high >= d.target
+                    AND s.date > d.drawdown_date
+                GROUP BY d.stock_data_id
+            """)
 
-        return data
+            result = connection.execute(statement, {"stock_symbol": drawdown.stock_symbol})
+
+            data = {}
+            for row in result:
+                stock_data_id, recovery_date = row
+                if recovery_date:
+                    info = drawdown_data[stock_data_id]
+                    info["recovery_date"] = recovery_date
+                    data[stock_data_id] = info
+            return data
 
     def calculate_target(self, drawdown_info: dict, recovery_percentage: int):
         drawdown_diff = drawdown_info["local_max"] - drawdown_info["low"]
