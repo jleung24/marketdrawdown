@@ -27,7 +27,7 @@ config = read_config('Django')
 SECRET_KEY = config['SecretKey']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['localhost']
 
