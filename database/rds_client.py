@@ -42,7 +42,7 @@ url = URL.create(
     port=config['Port'],
     database='market_data'
 )
-engine = create_engine(url, pool_size=100, max_overflow=200)
+engine = create_engine(url, pool_size=10, max_overflow=20)
 session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class RdsClient:
