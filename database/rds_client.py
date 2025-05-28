@@ -3,6 +3,7 @@ import json
 from botocore.exceptions import ClientError
 from sqlalchemy import create_engine, text
 from sqlalchemy.engine import URL
+from sqlalchemy.orm import sessionmaker
 
 from helpers.read_config import read_config
 from database.pydantic_models import *
@@ -41,12 +42,14 @@ url = URL.create(
     port=config['Port'],
     database='market_data'
 )
-engine = create_engine(url)
+engine = create_engine(url, pool_size=10, max_overflow=20)
+session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 class RdsClient:
 
     def __init__(self):
         self.engine = engine
+        self.session  = session()
         self.stock_data_id_list = []
 
     def insert_to_stock_data_table(self,stock_data: StockData):
@@ -177,34 +180,35 @@ class RdsClient:
     def get_drawdowns(self, drawdown: Drawdown) -> dict:
         drawdown_dict = {}
 
-        with self.engine.connect() as connection:
-            statement = text("""
-                SELECT sd1.stock_data_id, sd1.date, sd1.low, sd2.high
-                FROM stock_data AS sd1
-                JOIN (
-                    SELECT high, stock_data_id, date FROM stock_data
-                ) AS sd2 
-                ON sd2.stock_data_id = sd1.local_max_id
-                WHERE sd1.stock_symbol = :stock_symbol
-                AND ((sd2.high - sd1.low) / sd2.high)*100 >= :min
-                AND ((sd2.high - sd1.low) / sd2.high)*100 <= :max
-                AND ABS(sd1.date - sd2.date) >= :duration_days_min
-                AND ABS(sd1.date - sd2.date) <= :duration_days_max
-            """)
+        statement = text("""
+            SELECT sd1.stock_data_id, sd1.date, sd1.low, sd2.high
+            FROM stock_data AS sd1
+            JOIN (
+                SELECT high, stock_data_id, date FROM stock_data
+            ) AS sd2 
+            ON sd2.stock_data_id = sd1.local_max_id
+            WHERE sd1.stock_symbol = :stock_symbol
+            AND ((sd2.high - sd1.low) / sd2.high)*100 >= :min
+            AND ((sd2.high - sd1.low) / sd2.high)*100 <= :max
+            AND ABS(sd1.date - sd2.date) >= :duration_days_min
+            AND ABS(sd1.date - sd2.date) <= :duration_days_max
+        """)
 
-            for row in connection.execute(statement, {
-                "stock_symbol": drawdown.stock_symbol,
-                "min": drawdown.min,
-                "max": drawdown.max,
-                "duration_days_min": drawdown.duration_days_min,
-                "duration_days_max": drawdown.duration_days_max
-            }):
-                drawdown_dict[row[0]] = {}
-                drawdown_dict[row[0]]["drawdown_date"] = row[1]
-                drawdown_dict[row[0]]["low"] = row[2]
-                drawdown_dict[row[0]]["local_max"] = row[3]
-            
-            return drawdown_dict
+        result = self.session.execute(statement, {
+            "stock_symbol": drawdown.stock_symbol,
+            "min": drawdown.min,
+            "max": drawdown.max,
+            "duration_days_min": drawdown.duration_days_min,
+            "duration_days_max": drawdown.duration_days_max
+        })
+
+        for row in result:
+            drawdown_dict[row[0]] = {}
+            drawdown_dict[row[0]]["drawdown_date"] = row[1]
+            drawdown_dict[row[0]]["low"] = row[2]
+            drawdown_dict[row[0]]["local_max"] = row[3]
+        
+        return drawdown_dict
     
     # perplexity.ai just doubled the speed of this function :D
     def get_recovery_data(self, drawdown_data: dict, drawdown: Drawdown, recovery_percentage: int) -> dict:
@@ -214,39 +218,44 @@ class RdsClient:
             target = self.calculate_target(info, recovery_percentage)
             drawdown_list.append((stock_data_id, info["drawdown_date"], target))
 
-        with self.engine.connect() as connection:
+        if not drawdown_list:
+            return {}
 
-            values_clause = ", ".join(
-                f"('{stock_data_id}', '{drawdown_date}'::date, {target})"
-                for stock_data_id, drawdown_date, target in drawdown_list
+        values_clause = ", ".join(
+            f"('{stock_data_id}', '{drawdown_date}'::date, {target})"
+            for stock_data_id, drawdown_date, target in drawdown_list
+        )
+
+        statement = text(f"""
+            WITH drawdowns(stock_data_id, drawdown_date, target) AS (
+                VALUES {values_clause}
             )
+            SELECT d.stock_data_id, MIN(s.date) AS recovery_date
+            FROM drawdowns d
+            JOIN stock_data s
+                ON s.stock_symbol = :stock_symbol
+                AND s.high >= d.target
+                AND s.date > d.drawdown_date
+            GROUP BY d.stock_data_id
+        """)
 
-            statement = text(f"""
-                WITH drawdowns(stock_data_id, drawdown_date, target) AS (
-                    VALUES {values_clause}
-                )
-                SELECT d.stock_data_id, MIN(s.date) AS recovery_date
-                FROM drawdowns d
-                JOIN stock_data s
-                    ON s.stock_symbol = :stock_symbol
-                    AND s.high >= d.target
-                    AND s.date > d.drawdown_date
-                GROUP BY d.stock_data_id
-            """)
+        result = self.session.execute(statement, {"stock_symbol": drawdown.stock_symbol})
 
-            result = connection.execute(statement, {"stock_symbol": drawdown.stock_symbol})
-
-            data = {}
-            for row in result:
-                stock_data_id, recovery_date = row
-                if recovery_date:
-                    info = drawdown_data[stock_data_id]
-                    info["recovery_date"] = recovery_date
-                    data[stock_data_id] = info
-            return data
+        data = {}
+        for row in result:
+            stock_data_id, recovery_date = row
+            if recovery_date:
+                info = drawdown_data[stock_data_id]
+                info["recovery_date"] = recovery_date
+                data[stock_data_id] = info
+        
+        return data
 
     def calculate_target(self, drawdown_info: dict, recovery_percentage: int):
         drawdown_diff = drawdown_info["local_max"] - drawdown_info["low"]
         target_gain = (drawdown_diff * recovery_percentage) / 100
         target = drawdown_info["low"] + target_gain
         return target
+    
+    def close(self):
+        self.session.close()

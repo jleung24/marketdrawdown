@@ -18,4 +18,10 @@
         <canvas id="scatterChart" width="600" height="400"></canvas>
         {{ scatter_points|json_script:"scatter-data" }}
     </div>
+    <div class="bar-graph-container">
+        <canvas id="barGraph" width="600" height="400"></canvas>
+        {{ recovery_graph|json_script:"bar-graph" }}
+    </div>
+
+    
 </div>

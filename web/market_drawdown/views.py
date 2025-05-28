@@ -41,10 +41,10 @@ def get_data_view(request):
             'median': drawdowns.median_recovery_days,
             'avg': drawdowns.avg_recovery_days,
             'total': drawdowns.total_drawdowns,
-            'scatter_points': drawdowns.recovery_yearly_scatter
+            'scatter_points': drawdowns.recovery_yearly_scatter,
+            'recovery_graph': drawdowns.recovery_graph
         }
         html = render_to_string('html/dashboard.html', data)
-        drawdowns.cleanup()
 
     except:
         html = render_to_string('html/error.html')

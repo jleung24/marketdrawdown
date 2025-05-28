@@ -146,7 +146,7 @@
 
     var slider_3 = document.getElementById('slider-round-3');
     noUiSlider.create(slider_3, {
-      start: 85,
+      start: 100,
       connect: 'lower',
       range: {
         'min': 50,
@@ -296,7 +296,7 @@
         // Set all sliders to their default values
         slider.noUiSlider.set([15, 30]);
         slider_2.noUiSlider.set([0, 1000]);
-        slider_3.noUiSlider.set(85);
+        slider_3.noUiSlider.set(100);
 
         // Now, after a very short delay, submit the form
         setTimeout(function() {
@@ -315,6 +315,99 @@
       alert("You are submitting too quickly. Please wait a moment and try again.");
     }
   });
+</script>
+<script>
+  function renderBarChart() {
+      const dataScript = document.getElementById('bar-graph');
+      if (!dataScript) return;
+
+      // Parse the recovery_graph dictionary: {months: count}
+      const recoveryGraph = JSON.parse(dataScript.textContent);
+
+      // Convert keys to numbers and get all months observed
+      const months = Object.keys(recoveryGraph).map(Number);
+      if (months.length === 0) return;
+
+      // --- DYNAMIC BINNING LOGIC ---
+      const minMonth = Math.min(...months);
+      const maxMonth = Math.max(...months);
+
+      // Decide on a reasonable number of bins (e.g., 5-8)
+      const desiredBins = Math.min(8, Math.max(3, Math.ceil(months.length / 3)));
+      const binSize = Math.ceil((maxMonth - minMonth + 1) / desiredBins);
+
+      // Build bins: [{label, min, max}]
+      let bins = [];
+      let binStart = minMonth;
+      while (binStart <= maxMonth) {
+          let binEnd = binStart + binSize - 1;
+          bins.push({
+              label: binStart === binEnd ? `${binStart}` : `${binStart}-${binEnd}`,
+              min: binStart,
+              max: binEnd
+          });
+          binStart = binEnd + 1;
+      }
+
+      // Count data in each bin
+      const binCounts = bins.map(bin =>
+          months.reduce((sum, m) =>
+              m >= bin.min && m <= bin.max ? sum + recoveryGraph[m] : sum, 0)
+      );
+
+      const ctx = document.getElementById('barGraph');
+      if (!ctx) return;
+
+      if (window.recoveryBarChartInstance) {
+          window.recoveryBarChartInstance.destroy();
+      }
+
+      window.recoveryBarChartInstance = new Chart(ctx, {
+          type: 'bar',
+          data: {
+              labels: bins.map(b => b.label),
+              datasets: [{
+                  data: binCounts,
+                  backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                  borderColor: 'rgba(54, 162, 235, 1)',
+                  borderWidth: 1
+              }]
+          },
+          options: {
+              responsive: true,
+              plugins: {
+                  legend: { display: false },
+                  title: {
+                      display: true,
+                      text: 'Drawdowns by Recovery Time'
+                  }
+              },
+              scales: {
+                  x: {
+                      title: {
+                          display: true,
+                          text: 'Recovery Time (Months)'
+                      }
+                  },
+                  y: {
+                      beginAtZero: true,
+                      title: {
+                          display: true,
+                          text: 'Quantity of Drawdowns'
+                      },
+                      ticks: {
+                          precision: 0
+                      }
+                  }
+              }
+          }
+      });
+  }
+
+  // Run after every HTMX swap
+  document.body.addEventListener('htmx:afterSwap', renderBarChart);
+  // Run on initial page load
+  document.addEventListener('DOMContentLoaded', renderBarChart);
 </script>
 </body>
 </html>
