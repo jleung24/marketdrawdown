@@ -6,5 +6,3 @@ class Drawdown:
         self.max = max
         self.duration_days_min = duration_days_min
         self.duration_days_max = duration_days_max
-
-

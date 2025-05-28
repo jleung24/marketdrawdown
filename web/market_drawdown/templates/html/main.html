@@ -22,6 +22,7 @@
       hx-include="#index-dropdown"
       id="rangeForm"
       method="POST"
+      onsubmit="return false;"
     >
       {% csrf_token %}
       <div class="slider-container">
@@ -82,7 +83,6 @@
     </div>
   </div>
 
-  
   <script>
     // Initialize noUiSlider
     var slider = document.getElementById('slider-round');
@@ -103,7 +103,6 @@
       }
     });
     
-
     // Update hidden inputs and displayed values
     var drawdown_min = document.getElementById('drawdown_range_min');
     var drawdown_max = document.getElementById('drawdown_range_max');
@@ -114,10 +113,6 @@
       drawdown_min.value = min;
       drawdown_max.value = max;
     });
-
-    // Initialize values on page load
-    slider.noUiSlider.set([15, 30]);
-
 
     var slider_2 = document.getElementById('slider-round-2');
     noUiSlider.create(slider_2, {
@@ -149,16 +144,13 @@
       duration_max.value = max;
     });
 
-    // Initialize values on page load
-    slider_2.noUiSlider.set([0, 1000]);
-
     var slider_3 = document.getElementById('slider-round-3');
     noUiSlider.create(slider_3, {
       start: 85,
       connect: 'lower',
       range: {
-        'min': 5,
-        'max': 100
+        'min': 50,
+        'max': 150
       },
       step: 1,
       tooltips: true,
@@ -168,16 +160,12 @@
       }
     });
     
-
     var recovery_target= document.getElementById('recovery_target');
 
     slider_3.noUiSlider.on('update', function(values, handle) {
       var target = values;
       recovery_target.value = target;
     });
-
-    // Set the slider to a new value
-    slider_3.noUiSlider.set(85);
 
   </script>
 
@@ -300,5 +288,33 @@
     document.addEventListener('DOMContentLoaded', renderScatterChart);
   </script>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Disable the button immediately
+        document.getElementById('submitBtn').disabled = true;
+
+        // Set all sliders to their default values
+        slider.noUiSlider.set([15, 30]);
+        slider_2.noUiSlider.set([0, 1000]);
+        slider_3.noUiSlider.set(85);
+
+        // Now, after a very short delay, submit the form
+        setTimeout(function() {
+            document.getElementById('rangeForm').dispatchEvent(
+                new Event('submit', { bubbles: true, cancelable: true })
+            );
+            // Button will be re-enabled by htmx:afterSwap
+        }, 50); // 50ms is usually enough, or try 0ms
+    });
+  </script>
+
+  <script>
+  document.body.addEventListener('htmx:responseError', function(evt) {
+    // evt.detail.xhr.status contains the HTTP status code
+    if (evt.detail.xhr.status === 403) {
+      alert("You are submitting too quickly. Please wait a moment and try again.");
+    }
+  });
+</script>
 </body>
 </html>
