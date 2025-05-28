@@ -34,6 +34,7 @@ def get_secret():
 
 config = read_config('RDS')
 password = json.loads(get_secret())['password']
+
 url = URL.create(
     drivername="postgresql+psycopg2",
     username=config['User'],
@@ -42,8 +43,10 @@ url = URL.create(
     port=config['Port'],
     database='market_data'
 )
+
 engine = create_engine(url, pool_size=2, max_overflow=2)
 session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
 
 class RdsClient:
 
