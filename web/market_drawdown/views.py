@@ -68,7 +68,7 @@ def get_data_view(request):
     now = datetime.now()
     expiration = (now + timedelta(days=1)).replace(hour=7, minute=30, second=0, microsecond=0)
     if now.hour < 9:
-        expiration = now.replace(hour=9, minute=0, second=0, microsecond=0)
+        expiration = now.replace(hour=7, minute=30, second=0, microsecond=0)
     timeout = int((expiration - now).total_seconds())
 
     if cache_key:
