@@ -39,7 +39,6 @@ class MarketDrawdownTasks(TaskSet):
             else:
                 response.failure(f"Status code {response.status_code}")
 
-
     @task(2) # Weighting for different tasks
     def index(self):
         response = self.client.get("/")
