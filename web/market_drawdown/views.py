@@ -1,6 +1,5 @@
 import json
 import hashlib
-import time
 from datetime import datetime, timedelta
 
 from rest_framework.decorators import api_view, permission_classes
@@ -65,12 +64,15 @@ def get_data_view(request):
     except:
         html = render_to_string('html/error.html')
 
+    # set timeout for 09:00 UTC
     now = datetime.now()
     expiration = (now + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
-    expire_at = int(expiration.timestamp())
+    if now.hour < 9:
+        expiration = now.replace(hour=9, minute=0, second=0, microsecond=0)
+    timeout = int((expiration - now).total_seconds())
+
     if cache_key:
-        cache.set(cache_key, html)
-        cache.expireat(cache_key, expire_at)
+        cache.set(cache_key, html, timeout=timeout)
 
     return HttpResponse(html)
 
