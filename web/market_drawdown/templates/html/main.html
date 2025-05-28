@@ -368,8 +368,7 @@
               labels: bins.map(b => b.label),
               datasets: [{
                   data: binCounts,
-                  backgroundColor: 'rgba(54, 162, 235, 0.7)',
-                  borderColor: 'rgba(54, 162, 235, 1)',
+                  backgroundColor: 'rgba(97, 111, 172, 0.7)',
                   borderWidth: 1
               }]
           },
@@ -379,24 +378,31 @@
                   legend: { display: false },
                   title: {
                       display: true,
-                      text: 'Drawdowns by Recovery Time'
+                      text: 'Drawdowns by Recovery Time',
+                      color: '#fddbff',
                   }
               },
               scales: {
                   x: {
                       title: {
                           display: true,
-                          text: 'Recovery Time (Months)'
+                          text: 'Recovery Time (Months)',
+                          color: '#fddbff'
+                      },
+                      ticks: {
+                        color: '#fddbff',
                       }
                   },
                   y: {
                       beginAtZero: true,
                       title: {
                           display: true,
-                          text: 'Quantity of Drawdowns'
+                          text: 'Quantity of Drawdowns',
+                          color: '#fddbff',
                       },
                       ticks: {
-                          precision: 0
+                          precision: 0,
+                          color: '#fddbff',
                       }
                   }
               }

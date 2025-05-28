@@ -14,13 +14,15 @@
         </div>
     </div>
 
-    <div class="scatter-container">
-        <canvas id="scatterChart" width="600" height="400"></canvas>
-        {{ scatter_points|json_script:"scatter-data" }}
-    </div>
-    <div class="bar-graph-container">
-        <canvas id="barGraph" width="600" height="400"></canvas>
-        {{ recovery_graph|json_script:"bar-graph" }}
+    <div class="row-container">
+        <div class="graph-container">
+            <canvas id="scatterChart" width="570" height="425"></canvas>
+            {{ scatter_points|json_script:"scatter-data" }}
+        </div>
+        <div class="graph-container">
+            <canvas id="barGraph" width="570" height="425"></canvas>
+            {{ recovery_graph|json_script:"bar-graph" }}
+        </div>
     </div>
 
 </div>
