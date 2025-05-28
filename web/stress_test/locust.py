@@ -1,8 +1,11 @@
-from locust import HttpUser, TaskSet, task, between
 import json
+import random
+
+from locust import HttpUser, TaskSet, task, between
+
 
 class MarketDrawdownTasks(TaskSet):
-    wait_time = between(1, 3)  # Simulate user think time
+    wait_time = between(3, 5)  # Simulate user think time
 
     @task(1)
     def get_data(self):
@@ -14,15 +17,19 @@ class MarketDrawdownTasks(TaskSet):
 
         headers = {"Content-Type": "application/x-www-form-urlencoded",
                    "X-CSRFToken": csrftoken} # Include header for AJAX requests
+        
+        rand_drawdown  = random.sample(range(5, 100 + 1), 2)
+
         payload = {
             "csrfmiddlewaretoken": csrftoken,  # Use the extracted token
             "index-dropdown": "SPY",
-            "drawdown_range_min": "15",
-            "drawdown_range_max": "30",
+            "drawdown_range_min": min(rand_drawdown),
+            "drawdown_range_max": max(rand_drawdown),
             "duration_range_min": "0",
             "duration_range_max": "1000",
-            "recovery_target": "85"
+            "recovery_target": "100"
         }
+        print(payload)
 
         with self.client.post("/get_data/", data=payload, catch_response=True, headers=headers) as response:
             if response.status_code == 200:
@@ -47,7 +54,7 @@ class MarketDrawdownTasks(TaskSet):
 
 class WebsiteUser(HttpUser):
     host = "http://localhost:8000" # Replace with your server's URL
-    wait_time = between(2, 5) # Time between task execution
+    wait_time = between(3, 5) # Time between task execution
     tasks = [MarketDrawdownTasks]
 
     def on_start(self):

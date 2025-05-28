@@ -1,4 +1,7 @@
-import gc
+import json
+import hashlib
+import time
+from datetime import datetime, timedelta
 
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
@@ -8,6 +11,7 @@ from django.shortcuts import render, redirect
 from django_ratelimit.decorators import ratelimit
 from django.template.loader import render_to_string
 from django.http import JsonResponse, HttpResponse
+from django.core.cache import cache
 
 from computation.drawdown import Drawdown
 from computation.drawdowns import Drawdowns
@@ -15,7 +19,7 @@ from computation.drawdowns import Drawdowns
 
 @api_view(['POST','GET'])
 @permission_classes([AllowAny])
-@ratelimit(key='ip', rate='1/2s', block=True)
+# @ratelimit(key='ip', rate='1/2s', block=True)
 def get_data_view(request):
 
     # hide if go to api url
@@ -25,6 +29,18 @@ def get_data_view(request):
     if not data_ok(request):
         html = render_to_string('html/error.html')
         return HttpResponse(html)
+    
+    try:
+        request_data = request.data
+        data_string = json.dumps(request_data, sort_keys=True)
+        cache_key = "get_data_view:" + hashlib.sha256(data_string.encode()).hexdigest()
+    except Exception as e:
+        cache_key = None
+
+    if cache_key:
+        cached_html = cache.get(cache_key)
+        if cached_html is not None:
+            return HttpResponse(cached_html)
 
     try:
         drawdown = Drawdown(
@@ -48,6 +64,13 @@ def get_data_view(request):
 
     except:
         html = render_to_string('html/error.html')
+
+    now = datetime.now()
+    expiration = (now + timedelta(days=1)).replace(hour=9, minute=0, second=0, microsecond=0)
+    expire_at = int(expiration.timestamp())
+    if cache_key:
+        cache.set(cache_key, html)
+        cache.expireat(cache_key, expire_at)
 
     return HttpResponse(html)
 
