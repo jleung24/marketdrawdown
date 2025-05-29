@@ -29,7 +29,8 @@ SECRET_KEY = config['SecretKey']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+# 192.168.0.8 for local mobile testing
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.0.8']
 
 
 # Application definition
