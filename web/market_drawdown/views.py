@@ -69,10 +69,10 @@ def get_data_view(request):
 
     # set timeout for 09:00 UTC
     now = datetime.now()
-    expiration = (now + timedelta(days=1)).replace(hour=7, minute=30, second=0, microsecond=0)
-    if now.hour < 9:
-        expiration = now.replace(hour=7, minute=30, second=0, microsecond=0)
-    timeout = int((expiration - now).total_seconds())
+    next_expiration = now.replace(hour=7, minute=30, second=0, microsecond=0)
+    if now >= next_expiration:
+        next_expiration = (now + timedelta(days=1)).replace(hour=7, minute=30, second=0, microsecond=0)
+    timeout = int((next_expiration - now).total_seconds())
 
     if cache_key:
         cache.set(cache_key, html, timeout=timeout)
