@@ -304,7 +304,7 @@
         data: {
           datasets: [
             {
-              label: 'Recovery Points',
+              label: 'Drawdown Period Points',
               data: bubblePoints, // Each point: {x, y, r}
               backgroundColor: 'rgba(97, 111, 172, 0.7)',
               borderColor: 'rgba(97, 111, 172, 1)',
@@ -338,6 +338,55 @@
     document.addEventListener('DOMContentLoaded', renderBubbleChart);
   </script>
 
+  <script>
+    function renderBubbleChart2() {
+      const dataScript = document.getElementById('scatter-data-3');
+      if (!dataScript) return;
+      const bubblePoints = JSON.parse(dataScript.textContent);
+      const ctx = document.getElementById('scatterChart-3');
+      if (!ctx) return;
+      if (window.scatterChartInstance3) {
+        window.scatterChartInstance3.destroy();
+      }
+
+      window.scatterChartInstance3 = new Chart(ctx, {
+        type: 'bubble',
+        data: {
+          datasets: [
+            {
+              label: 'Max Drawdown Points',
+              data: bubblePoints, // Each point: {x, y, r}
+              backgroundColor: 'rgba(97, 111, 172, 0.7)',
+              borderColor: 'rgba(97, 111, 172, 1)',
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Drawdown vs Max Drawdown Difference', color: '#fddbff' },
+          },
+          scales: {
+            x: { 
+              title: { display: true, text: 'Drawdown (%)', color: '#fddbff'}, 
+              ticks: { color: '#fddbff' }
+            },
+            y: { 
+              min: 0,
+              title: { display: true, text: 'Max Drawdown Difference (%)', color: '#fddbff'}, 
+              ticks: { color: '#fddbff' }
+            }
+          }
+        }
+      });
+    }
+
+    // Run after every HTMX swap
+    document.body.addEventListener('htmx:afterSwap', renderBubbleChart2);
+    // Run on initial page load
+    document.addEventListener('DOMContentLoaded', renderBubbleChart2);
+  </script>
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {

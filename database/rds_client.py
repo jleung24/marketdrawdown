@@ -184,12 +184,18 @@ class RdsClient:
         drawdown_dict = {}
 
         statement = text("""
-            SELECT sd1.stock_data_id, sd1.date, sd1.low, sd2.high, ABS(sd1.date - sd2.date) AS drawdown_period
+            SELECT sd1.stock_data_id, sd1.date, sd1.low, sd2.high, ABS(sd1.date - sd2.date) AS drawdown_period, sd3.max_drawdown
             FROM stock_data AS sd1
             JOIN (
                 SELECT high, stock_data_id, date FROM stock_data
             ) AS sd2 
             ON sd2.stock_data_id = sd1.local_max_id
+            JOIN (
+                SELECT MIN(low) as max_drawdown, local_max_id
+                FROM stock_data
+                GROUP BY local_max_id
+            ) as sd3
+            ON sd3.local_max_id = sd1.local_max_id
             WHERE sd1.stock_symbol = :stock_symbol
             AND ((sd2.high - sd1.low) / sd2.high)*100 >= :min
             AND ((sd2.high - sd1.low) / sd2.high)*100 <= :max
@@ -211,6 +217,7 @@ class RdsClient:
             drawdown_dict[row[0]]["low"] = row[2]
             drawdown_dict[row[0]]["local_max"] = row[3]
             drawdown_dict[row[0]]['drawdown_period_days'] = row[4]
+            drawdown_dict[row[0]]['max_drawdown'] = row[5]
         
         return drawdown_dict
     

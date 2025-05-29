@@ -30,6 +30,10 @@
             <canvas id="scatterChart-2" width="570" height="425"></canvas>
             {{ drawdown_period_graph|json_script:"scatter-data-2"}}
         </div>
+        <div class="graph-container">
+            <canvas id="scatterChart-3" width="570" height="425"></canvas>
+            {{ max_drawdown_graph|json_script:"scatter-data-3"}}
+        </div>
     </div>
 
 </div>

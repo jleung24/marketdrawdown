@@ -20,6 +20,7 @@ class Drawdowns:
         self.recovery_yearly_scatter = []
         self.recovery_list = []
         self.drawdown_period_graph = []
+        self.max_drawdown_graph = []
 
     def get_drawdowns(self):
         self.drawdown_data = self.client.get_drawdowns(self.drawdown)
@@ -38,6 +39,7 @@ class Drawdowns:
             self.push_recovery_months_data(total_recovery_months)
             self.push_recovery_yearly_data(drawdown_info)
             self.push_drawdown_period_data(drawdown_info)
+            self.push_max_drawdown_data(drawdown_info)
         
         self.avg_recovery_months = round(statistics.mean(self.recovery_list))
         self.median_recovery_months = round(statistics.median(self.recovery_list))
@@ -73,6 +75,22 @@ class Drawdowns:
         ]
         self.recovery_yearly_scatter = bubble_points
 
+        counter = Counter((p["x"], p["y"]) for p in self.max_drawdown_graph)
+        bubble_points = [
+            {"x": x, "y": y, "r": 3 + 0.5 * count}
+            for (x, y), count in counter.items()
+        ]
+        self.max_drawdown_graph = bubble_points
+    
+    def push_max_drawdown_data(self, drawdown_info: dict):
+        peak = drawdown_info['local_max']
+        current = drawdown_info['low']
+        max_drawdown = drawdown_info['max_drawdown']
+        current_drawdown_percent = round(((peak - current)/peak)*100)
+        max_drawdown_percent = round(((peak - max_drawdown)/peak)*100)
+        drawdown_diff = abs(max_drawdown_percent - current_drawdown_percent)
+        self.max_drawdown_graph.append({'x': current_drawdown_percent, 'y': drawdown_diff})
+
     def reset_data(self):
         self.drawdown_data = {}
         self.total_drawdowns = 0
@@ -82,3 +100,4 @@ class Drawdowns:
         self.recovery_yearly_scatter = []
         self.recovery_list = []
         self.drawdown_period_graph = []
+        self.max_drawdown_graph = []
