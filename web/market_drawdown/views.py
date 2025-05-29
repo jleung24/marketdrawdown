@@ -84,7 +84,7 @@ def data_ok(request):
         str(request.data['index-dropdown']) in ['QQQ', 'SPY'],
         int(request.data['drawdown_range_min']) < int(request.data['drawdown_range_max']),
         int(request.data['duration_range_min']) < int(request.data['duration_range_max']),
-        int(request.data['recovery_target']) <= 150 and int(request.data['recovery_target']) >= 50,
+        int(request.data['recovery_target']) <= 100 and int(request.data['recovery_target']) >= 20,
         int(request.data['drawdown_range_min']) >= 5 and int(request.data['drawdown_range_max']) <= 100,
         int(request.data['duration_range_min']) >= 0 and int(request.data['duration_range_max']) <= 200
     ]
