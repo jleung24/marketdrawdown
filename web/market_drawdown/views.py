@@ -30,7 +30,8 @@ def get_data_view(request):
         return HttpResponse(html)
     
     try:
-        request_data = request.data
+        request_data = dict(request.data)
+        request_data.pop('csrfmiddlewaretoken', None)
         data_string = json.dumps(request_data, sort_keys=True)
         cache_key = "get_data_view:" + hashlib.sha256(data_string.encode()).hexdigest()
     except Exception as e:
