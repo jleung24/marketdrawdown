@@ -18,7 +18,7 @@ from computation.drawdowns import Drawdowns
 
 @api_view(['POST','GET'])
 @permission_classes([AllowAny])
-# @ratelimit(key='ip', rate='1/2s', block=True)
+@ratelimit(key='ip', rate='1/2s', block=True)
 def get_data_view(request):
 
     # hide if go to api url

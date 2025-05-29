@@ -27,11 +27,14 @@ config = read_config('Django')
 SECRET_KEY = config['SecretKey']
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 # 192.168.0.8 for local mobile testing
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.0.8']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.0.8' , 'marketdrawdown.com']
 
+# Cookies
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 # Application definition
 
