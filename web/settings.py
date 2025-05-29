@@ -29,8 +29,11 @@ SECRET_KEY = config['SecretKey']
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
+RATELIMIT_IP_META_KEY = 'HTTP_X_FORWARDED_FOR'
+
+
 # 192.168.0.8 for local mobile testing
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.0.8' , 'marketdrawdown.com']
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '192.168.0.8' , 'marketdrawdown.com', '50.18.247.107']
 
 # Cookies
 CSRF_COOKIE_SECURE = True
