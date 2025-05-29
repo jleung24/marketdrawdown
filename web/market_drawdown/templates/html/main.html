@@ -35,7 +35,7 @@
         </div>
         <div>
           <label>
-            <span class="slider-row-label-bold">Drawdown Period </span> days
+            <span class="slider-row-label-bold">Drawdown Period </span> months
           </label>
           <div class="slider-styled" id="slider-round-2"></div>
         </div>
@@ -116,13 +116,13 @@
 
     var slider_2 = document.getElementById('slider-round-2');
     noUiSlider.create(slider_2, {
-      start: [0, 1000],
+      start: [0, 30],
       connect: true,
       range: {
         'min': [0],
-        '50%': [365],
-        '90%': [3650],
-        'max': [9999]
+        '50%': [12],
+        '90%': [120],
+        'max': [200]
       },
       step: 1,
       margin: 1,
@@ -232,14 +232,14 @@
       const regressionLine = getRegressionLine(scatterPoints);
 
       window.scatterChartInstance = new Chart(ctx, {
-        type: 'scatter',
+        type: 'bubble',
         data: {
           datasets: [
             {
               label: 'Recovery Points',
-              data: scatterPoints,
+              data: scatterPoints, // Each point: {x, y, r}
               backgroundColor: 'rgba(97, 111, 172, 0.7)',
-              pointRadius: 5
+              borderColor: 'rgba(97, 111, 172, 1)',
             },
             {
               label: 'regression',
@@ -272,7 +272,7 @@
           },
             y: { 
               min: 0,
-              title: { display: true, text: 'Recovery Time (Days)', color: '#fddbff'}, 
+              title: { display: true, text: 'Recovery Time (Months)', color: '#fddbff'}, 
               ticks: {
                 color: '#fddbff',
               }
@@ -289,13 +289,64 @@
   </script>
 
   <script>
+    function renderBubbleChart() {
+      const dataScript = document.getElementById('scatter-data-2');
+      if (!dataScript) return;
+      const bubblePoints = JSON.parse(dataScript.textContent);
+      const ctx = document.getElementById('scatterChart-2');
+      if (!ctx) return;
+      if (window.scatterChartInstance2) {
+        window.scatterChartInstance2.destroy();
+      }
+
+      window.scatterChartInstance2 = new Chart(ctx, {
+        type: 'bubble',
+        data: {
+          datasets: [
+            {
+              label: 'Recovery Points',
+              data: bubblePoints, // Each point: {x, y, r}
+              backgroundColor: 'rgba(97, 111, 172, 0.7)',
+              borderColor: 'rgba(97, 111, 172, 1)',
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Recovery Time vs Drawdown Period', color: '#fddbff' },
+          },
+          scales: {
+            x: { 
+              title: { display: true, text: 'Drawdown Period (Months)', color: '#fddbff'}, 
+              ticks: { color: '#fddbff' }
+            },
+            y: { 
+              min: 0,
+              title: { display: true, text: 'Recovery Time (Months)', color: '#fddbff'}, 
+              ticks: { color: '#fddbff' }
+            }
+          }
+        }
+      });
+    }
+
+    // Run after every HTMX swap
+    document.body.addEventListener('htmx:afterSwap', renderBubbleChart);
+    // Run on initial page load
+    document.addEventListener('DOMContentLoaded', renderBubbleChart);
+  </script>
+
+
+  <script>
     document.addEventListener('DOMContentLoaded', function() {
         // Disable the button immediately
         document.getElementById('submitBtn').disabled = true;
 
         // Set all sliders to their default values
         slider.noUiSlider.set([15, 30]);
-        slider_2.noUiSlider.set([0, 1000]);
+        slider_2.noUiSlider.set([0, 30]);
         slider_3.noUiSlider.set(100);
 
         // Now, after a very short delay, submit the form
@@ -397,7 +448,7 @@
                       beginAtZero: true,
                       title: {
                           display: true,
-                          text: 'Quantity of Drawdowns',
+                          text: '# of Drawdowns',
                           color: '#fddbff',
                       },
                       ticks: {

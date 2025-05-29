@@ -41,28 +41,30 @@ def get_data_view(request):
         if cached_html is not None:
             return HttpResponse(cached_html)
 
-    try:
-        drawdown = Drawdown(
-            str(request.data['index-dropdown']),
-            int(request.data['drawdown_range_min']), 
-            int(request.data['drawdown_range_max']),
-            int(request.data['duration_range_min']),
-            int(request.data['duration_range_max'])
-        )
+    # try:
+    drawdown = Drawdown(
+        str(request.data['index-dropdown']),
+        int(request.data['drawdown_range_min']), 
+        int(request.data['drawdown_range_max']),
+        int(request.data['duration_range_min'])*30,
+        int(request.data['duration_range_max'])*30
+    )
 
-        drawdowns = Drawdowns(drawdown)
-        drawdowns.get_drawdown_info(int(request.data['recovery_target']))
-        data = {
-            'median': drawdowns.median_recovery_days,
-            'avg': drawdowns.avg_recovery_days,
-            'total': drawdowns.total_drawdowns,
-            'scatter_points': drawdowns.recovery_yearly_scatter,
-            'recovery_graph': drawdowns.recovery_graph
-        }
-        html = render_to_string('html/dashboard.html', data)
+    drawdowns = Drawdowns(drawdown)
+    drawdowns.get_drawdown_info(int(request.data['recovery_target']))
+    data = {
+        'median': drawdowns.median_recovery_months,
+        'avg': drawdowns.avg_recovery_months,
+        'total': drawdowns.total_drawdowns,
+        'scatter_points': drawdowns.recovery_yearly_scatter,
+        'recovery_graph': drawdowns.recovery_graph,
+        'drawdown_period_graph': drawdowns.drawdown_period_graph
+    }
 
-    except:
-        html = render_to_string('html/error.html')
+    html = render_to_string('html/dashboard.html', data)
+
+    # except:
+    #     html = render_to_string('html/error.html')
 
     # set timeout for 09:00 UTC
     now = datetime.now()
@@ -83,7 +85,7 @@ def data_ok(request):
         int(request.data['duration_range_min']) < int(request.data['duration_range_max']),
         int(request.data['recovery_target']) <= 150 and int(request.data['recovery_target']) >= 50,
         int(request.data['drawdown_range_min']) >= 5 and int(request.data['drawdown_range_max']) <= 100,
-        int(request.data['duration_range_min']) >= 0 and int(request.data['duration_range_max']) <= 9999
+        int(request.data['duration_range_min']) >= 0 and int(request.data['duration_range_max']) <= 200
     ]
 
     return all(conditions)

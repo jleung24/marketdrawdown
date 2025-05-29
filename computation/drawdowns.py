@@ -1,4 +1,5 @@
 import statistics
+from collections import Counter
 
 from computation.drawdown import Drawdown
 from database.rds_client import RdsClient
@@ -13,11 +14,12 @@ class Drawdowns:
         self.client = rds_client
         self.drawdown_data = {}
         self.total_drawdowns = 0
-        self.avg_recovery_days = 0
-        self.median_recovery_days = 0
+        self.avg_recovery_months = 0
+        self.median_recovery_months = 0
         self.recovery_graph = {}
         self.recovery_yearly_scatter = []
         self.recovery_list = []
+        self.drawdown_period_graph = []
 
     def get_drawdowns(self):
         self.drawdown_data = self.client.get_drawdowns(self.drawdown)
@@ -30,16 +32,18 @@ class Drawdowns:
 
         for stock_data_id, drawdown_info in self.drawdown_data.items():
             total_recovery_days = (drawdown_info["recovery_date"]- drawdown_info["drawdown_date"]).days
-            drawdown_info["total_recovery_days"] = total_recovery_days
-            self.recovery_list.append(total_recovery_days)
-            self.push_recovery_months_data(total_recovery_days)
+            total_recovery_months = round(total_recovery_days/30)
+            drawdown_info["total_recovery_months"] = total_recovery_months
+            self.recovery_list.append(total_recovery_months)
+            self.push_recovery_months_data(total_recovery_months)
             self.push_recovery_yearly_data(drawdown_info)
+            self.push_drawdown_period_data(drawdown_info)
         
-        self.avg_recovery_days = round(statistics.mean(self.recovery_list))
-        self.median_recovery_days = round(statistics.median(self.recovery_list))
+        self.avg_recovery_months = round(statistics.mean(self.recovery_list))
+        self.median_recovery_months = round(statistics.median(self.recovery_list))
+        self.convert_scatter_to_bubble()
 
-    def push_recovery_months_data(self, total_recovery_days: int):
-        total_recovery_months = round(total_recovery_days/30)
+    def push_recovery_months_data(self, total_recovery_months: int):
 
         if total_recovery_months in self.recovery_graph.keys():
             self.recovery_graph[total_recovery_months] += 1
@@ -48,13 +52,33 @@ class Drawdowns:
 
     def push_recovery_yearly_data(self, drawdown_info: dict):
         year = drawdown_info['drawdown_date'].year
-        self.recovery_yearly_scatter.append({'x': year, 'y': drawdown_info['total_recovery_days']})
+        self.recovery_yearly_scatter.append({'x': year, 'y': drawdown_info['total_recovery_months']})
+
+    def push_drawdown_period_data(self, drawdown_info: dict):
+        drawdown_period = round(drawdown_info['drawdown_period_days']/30)
+        self.drawdown_period_graph.append({'x': drawdown_period, 'y': drawdown_info['total_recovery_months']})
     
+    def convert_scatter_to_bubble(self):
+        counter = Counter((p["x"], p["y"]) for p in self.drawdown_period_graph)
+        bubble_points = [
+            {"x": x, "y": y, "r": 3 + 1 * count}
+            for (x, y), count in counter.items()
+        ]
+        self.drawdown_period_graph = bubble_points
+
+        counter = Counter((p["x"], p["y"]) for p in self.recovery_yearly_scatter)
+        bubble_points = [
+            {"x": x, "y": y, "r": 3 + 0.5 * count}
+            for (x, y), count in counter.items()
+        ]
+        self.recovery_yearly_scatter = bubble_points
+
     def reset_data(self):
         self.drawdown_data = {}
         self.total_drawdowns = 0
-        self.avg_recovery_days = 0
-        self.median_recovery_days = 0
+        self.avg_recovery_months = 0
+        self.median_recovery_months = 0
         self.recovery_graph = {}
         self.recovery_yearly_scatter = []
         self.recovery_list = []
+        self.drawdown_period_graph = []

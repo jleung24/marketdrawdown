@@ -1,12 +1,12 @@
 <div class="dashboard-container">
     <div class="stats-container">
         <div class="stats-item">
-            <span class="stats-label">Median Recovery Time</span>
-            <span class="stats-value">{{ median }} days</span>
+            <span class="stats-label">Average Recovery Time</span>
+            <span class="stats-value">{{ avg }} months</span>
         </div>
         <div class="stats-item">
-            <span class="stats-label">Average Recovery Time</span>
-            <span class="stats-value">{{ avg }} days</span>
+            <span class="stats-label">Median Recovery Time</span>
+            <span class="stats-value">{{ median }} months</span>
         </div>
         <div class="stats-item">
             <span class="stats-label">Total Drawdowns</span>
@@ -22,6 +22,13 @@
         <div class="graph-container">
             <canvas id="barGraph" width="570" height="425"></canvas>
             {{ recovery_graph|json_script:"bar-graph" }}
+        </div>
+    </div>
+
+    <div class="row-container">
+        <div class="graph-container">
+            <canvas id="scatterChart-2" width="570" height="425"></canvas>
+            {{ drawdown_period_graph|json_script:"scatter-data-2"}}
         </div>
     </div>
 
