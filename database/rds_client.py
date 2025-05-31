@@ -45,14 +45,13 @@ url = URL.create(
 )
 
 engine = create_engine(url, pool_size=2, max_overflow=2)
-session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Session = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 class RdsClient:
 
     def __init__(self):
         self.engine = engine
-        self.session  = session()
         self.stock_data_id_list = []
 
     def insert_to_stock_data_table(self,stock_data: StockData):
@@ -203,21 +202,22 @@ class RdsClient:
             AND ABS(sd1.date - sd2.date) <= :duration_days_max
         """)
 
-        result = self.session.execute(statement, {
-            "stock_symbol": drawdown.stock_symbol,
-            "min": drawdown.min,
-            "max": drawdown.max,
-            "duration_days_min": drawdown.duration_days_min,
-            "duration_days_max": drawdown.duration_days_max
-        })
+        with Session() as session:
+            result = session.execute(statement, {
+                "stock_symbol": drawdown.stock_symbol,
+                "min": drawdown.min,
+                "max": drawdown.max,
+                "duration_days_min": drawdown.duration_days_min,
+                "duration_days_max": drawdown.duration_days_max
+            })
 
-        for row in result:
-            drawdown_dict[row[0]] = {}
-            drawdown_dict[row[0]]["drawdown_date"] = row[1]
-            drawdown_dict[row[0]]["low"] = row[2]
-            drawdown_dict[row[0]]["local_max"] = row[3]
-            drawdown_dict[row[0]]['drawdown_period_days'] = row[4]
-            drawdown_dict[row[0]]['max_drawdown'] = row[5]
+            for row in result:
+                drawdown_dict[row[0]] = {}
+                drawdown_dict[row[0]]["drawdown_date"] = row[1]
+                drawdown_dict[row[0]]["low"] = row[2]
+                drawdown_dict[row[0]]["local_max"] = row[3]
+                drawdown_dict[row[0]]['drawdown_period_days'] = row[4]
+                drawdown_dict[row[0]]['max_drawdown'] = row[5]
         
         return drawdown_dict
     
@@ -250,15 +250,16 @@ class RdsClient:
             GROUP BY d.stock_data_id
         """)
 
-        result = self.session.execute(statement, {"stock_symbol": drawdown.stock_symbol})
+        with Session() as session:
+            result = session.execute(statement, {"stock_symbol": drawdown.stock_symbol})
 
-        data = {}
-        for row in result:
-            stock_data_id, recovery_date = row
-            if recovery_date:
-                info = drawdown_data[stock_data_id]
-                info["recovery_date"] = recovery_date
-                data[stock_data_id] = info
+            data = {}
+            for row in result:
+                stock_data_id, recovery_date = row
+                if recovery_date:
+                    info = drawdown_data[stock_data_id]
+                    info["recovery_date"] = recovery_date
+                    data[stock_data_id] = info
         
         return data
 
@@ -267,6 +268,3 @@ class RdsClient:
         target_gain = (drawdown_diff * recovery_percentage) / 100
         target = drawdown_info["low"] + target_gain
         return target
-    
-    def close(self):
-        self.session.close()
