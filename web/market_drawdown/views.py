@@ -67,6 +67,7 @@ def get_data_view(request):
 
     except:
         html = render_to_string('html/error.html')
+        return HttpResponse(html)
 
     # set timeout for 09:00 UTC
     now = datetime.now()
